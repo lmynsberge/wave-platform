@@ -38,8 +38,9 @@ Each role has a charter in `agents/roles/`:
 4. **Every implementation is reviewed.** Code review records live in `reviews/`, referencing the handoff ID.
 5. **Blockers become issues.** Any ambiguity, spec conflict, or blocker is filed in `issues/` using the template — never silently resolved by an implementer. Escalation is one tier up.
 6. **Spec changes re-trigger review.** If implementation reveals the spec is wrong, the spec is amended and re-reviewed; implementers do not deviate unilaterally.
-7. **IDs everywhere.** Specs: `SPEC-###`. Handoffs: `SPEC-###-H##`. Issues: `ISS-###`. Reviews reference the ID they review.
-8. **Commits are traceable.** One commit per handoff, message carrying the handoff ID + requirement/AC IDs (see agents/WORKFLOW.md §Commit convention and docs/TRACEABILITY.md).
+7. **IDs everywhere.** Specs: `SPEC-###` (cross-cutting QA/process: `SPEC-QA-###`). Handoffs: `SPEC-###-H##`. Issues: `ISS-###`. Reviews reference the ID they review.
+8. **Integration tests are spec-locked.** One black-box itest file per spec, designed in the spec phase (red first), immutable without a reviewed spec change (SPEC-QA-001).
+9. **Commits are traceable.** One commit per handoff, message carrying the handoff ID + requirement/AC IDs (see agents/WORKFLOW.md §Commit convention and docs/TRACEABILITY.md).
 
 ## Artifact flow
 

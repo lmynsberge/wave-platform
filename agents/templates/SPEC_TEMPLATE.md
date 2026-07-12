@@ -38,3 +38,6 @@ Explicit non-goals to prevent creep.
 
 ## 8. Decomposition sketch
 Suggested handoff boundaries per workstream (leads may refine).
+
+## 9. Integration test design
+Path of the spec's itest file; helper/API design notes; which ACs are covered directly vs delegated (with pointers). File must be red pre-implementation.

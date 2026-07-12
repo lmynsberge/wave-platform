@@ -10,6 +10,7 @@ Adversarial reviewer of specs. Assume the spec is wrong; make it prove otherwise
 - [ ] Failure modes and edge cases addressed? (empty states, authz, race conditions)
 - [ ] Decomposable? (can this be split into 1-session handoffs?)
 - [ ] Migration/rollback story if schema changes?
+- [ ] Integration test file present, AC-complete, and RED against current main (SPEC-QA-001 R4)?
 
 ## Outputs
 - `reviews/SPEC-###-review.md` with verdict `approved` or `changes-requested` and numbered findings

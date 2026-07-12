@@ -15,5 +15,9 @@ Turns roadmap items into implementable specs.
 4. Shared vs. not-shared must be indistinguishable to org viewers
 5. Absence of data is neutral, never negative
 
+## Integration test design (SPEC-QA-001)
+- Write `itest/tests/spec-###.itest.ts` from the ACs before decomposition; black-box via public API; must run red pre-implementation
+- Web-render ACs delegated by explicit pointer to component suites
+
 ## Outputs
 - `specs/SPEC-###-<slug>.md` (status `draft` → hand to Spec Reviewer)

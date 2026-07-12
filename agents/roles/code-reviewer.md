@@ -8,6 +8,7 @@ Reviews one implementation against its handoff and spec.
 - [ ] Tests: present, meaningful, passing? Edge cases from spec covered?
 - [ ] Security: input validation, authz enforced, no secrets, no private-context leakage to org-facing surfaces?
 - [ ] No scope creep beyond the handoff?
+- [ ] No changes to itest/tests/ without a spec/amendment ID (lock rule, SPEC-QA-001 R3)?
 - [ ] Style per `docs/ENGINEERING.md`?
 
 ## Outputs

@@ -9,6 +9,12 @@
    - `changes-requested` → architect revises, reviewer re-reviews (max 2 cycles, then escalate to Orchestrator)
 4. Orchestrator gives final sign-off on `approved` specs before decomposition.
 
+## 1b. Integration test design (TDD — from SPEC-007 onward)
+
+Before decomposition, the Spec Architect writes `itest/tests/spec-###.itest.ts` implementing the spec's acceptance criteria as black-box tests against the public API (function signatures and helper design count as design work). The file must compile and run RED against the unimplemented system. The Spec Reviewer verifies red-ness and AC coverage as part of spec review.
+
+**LOCK RULE (SPEC-QA-001 R3):** files under `itest/tests/` change ONLY with a reviewed spec amendment or new spec. A commit touching them must reference the spec/amendment ID; reviewers reject violations. Unit/component tests remain free to evolve.
+
 ## 2. Decomposition phase
 
 5. The relevant Workstream Lead(s) decompose the spec into handoffs `handoffs/SPEC-###-H##-<slug>.md`.
@@ -29,7 +35,7 @@
 10. Code Reviewer writes `reviews/SPEC-###-H##-code-review.md`. Verdict:
     - `approved` → Lead merges to main
     - `changes-requested` → back to implementer (max 2 cycles, then escalate to Lead)
-11. Reviewer checks: conformance to handoff, conformance to spec contracts, tests, security (input validation, authz on every route/query), no scope creep.
+11. Reviewer checks: conformance to handoff, conformance to spec contracts, tests, security (input validation, authz on every route/query), no scope creep, and NO diffs to itest/tests/ without a spec/amendment reference (lock rule).
 
 ## 5. Integration
 
