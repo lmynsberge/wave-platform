@@ -1,0 +1,57 @@
+/* Wave design tokens — paper & slate, one tidal accent. */
+:root {
+  --paper: #f6f8f8;
+  --card: #ffffff;
+  --ink: #1c2a30;
+  --ink-soft: #5b6d74;
+  --quiet: #8a9aa0;        /* insufficient: neutral, never negative */
+  --tide: #0e7c6b;         /* the single accent */
+  --tide-soft: #dcefe9;
+  --line: #e3e9e9;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --display: "Sora", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 15px/1.5 system-ui, "Public Sans", sans-serif;
+}
+h1, h2, h3 { font-family: var(--display); letter-spacing: -0.01em; }
+.shell { display: grid; grid-template-columns: 220px 1fr 300px; gap: 24px; max-width: 1120px; margin: 0 auto; padding: 24px 20px; }
+@media (max-width: 900px) { .shell { grid-template-columns: 1fr; } }
+.rail { display: flex; flex-direction: column; gap: 12px; }
+.rail .who { font-family: var(--display); font-weight: 600; }
+.rail select, .auth input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font: inherit; }
+button { font: inherit; border: 0; border-radius: 8px; padding: 8px 14px; background: var(--tide); color: #fff; cursor: pointer; }
+button.ghost { background: transparent; color: var(--ink-soft); }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--tide); outline-offset: 2px; }
+
+.auth { max-width: 360px; margin: 12vh auto; display: flex; flex-direction: column; gap: 10px; }
+.auth h1 { margin-bottom: 4px; }
+.auth .sub { color: var(--ink-soft); margin: 0 0 12px; }
+
+.cards { display: flex; flex-direction: column; gap: 14px; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+}
+.card header { display: flex; justify-content: space-between; align-items: baseline; }
+.card h3 { margin: 0; font-size: 16px; }
+.badge { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+.badge.insufficient { background: var(--paper); color: var(--quiet); border: 1px solid var(--line); }
+.badge.emerging { background: var(--tide-soft); color: var(--tide); }
+.badge.established { background: var(--tide); color: #fff; }
+.score { font-family: var(--mono); font-size: 28px; color: var(--tide); }
+.counts { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+.hint { color: var(--ink-soft); font-size: 13px; margin-top: 8px; }
+
+/* Signature: the signal meter — a tide line with threshold ticks. */
+.meter { position: relative; height: 6px; background: var(--line); border-radius: 3px; margin-top: 12px; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; background: var(--tide); border-radius: 3px; transition: width .5s ease; }
+.meter .tick { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--paper); border: 1px solid var(--line); }
+@media (prefers-reduced-motion: reduce) { .meter .fill { transition: none; } }
+
+.empty { border: 1px dashed var(--line); border-radius: 12px; padding: 28px; text-align: center; color: var(--ink-soft); }
+.inbox h2 { font-size: 15px; margin: 0 0 10px; }
+.inbox .item { border-top: 1px solid var(--line); padding: 10px 0; font-size: 13px; }
+.inbox .meta { font-family: var(--mono); font-size: 11px; color: var(--quiet); display: flex; gap: 8px; }
+.banner { background: var(--tide-soft); color: var(--tide); border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 12px; }

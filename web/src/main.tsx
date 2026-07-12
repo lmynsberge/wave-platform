@@ -1,12 +1,12 @@
+import "./styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
-import { PingStatus } from "./PingStatus";
+import App from "./App";
 
 const client = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={client}>
-    <h1>Wave — walking skeleton</h1>
-    <PingStatus />
+    <App />
   </QueryClientProvider>,
 );
