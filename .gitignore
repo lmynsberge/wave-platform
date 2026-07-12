@@ -4,3 +4,7 @@ target/
 .env
 *.log
 .DS_Store
+
+node_modules/
+target/
+dist/

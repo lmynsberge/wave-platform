@@ -1,9 +1,9 @@
 ---
 id: SPEC-001
 title: Foundation & walking skeleton
-status: draft
+status: done
 author: spec-architect
-signed_off: false
+signed_off: true
 workstreams: [core, server, web]
 ---
 

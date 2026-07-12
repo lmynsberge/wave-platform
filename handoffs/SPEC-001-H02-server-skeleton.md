@@ -2,7 +2,7 @@
 id: SPEC-001-H02
 spec: SPEC-001
 workstream: server
-status: ready
+status: merged
 depends_on: [SPEC-001-H01]
 assignee: implementer
 ---

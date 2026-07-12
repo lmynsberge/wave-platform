@@ -1,0 +1,13 @@
+import { buildApp } from "./app.js";
+
+const coreUrl = process.env.CORE_URL ?? "http://localhost:8081";
+const port = Number(process.env.PORT ?? 8080);
+
+const app = buildApp({ coreUrl });
+app
+  .listen({ port, host: "0.0.0.0" })
+  .then(() => console.log(`wave-server listening on ${port}, core at ${coreUrl}`))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
