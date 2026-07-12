@@ -9,7 +9,7 @@ Ordering follows the v1 scope layers in PROJECT_BRIEF.md. Each item becomes one 
 5. **SPEC-005 — Feedback capture & validation flows**: DONE — validation queue, inbox, manager assessments with pending_upward state + upward decisions (reviews/SPEC-005-*)
 6. **SPEC-006 — Individual profile**: DONE — auth+shell, attribute cards with policy-driven signal meter, inbox panel, invariant render tests (reviews/SPEC-006-*; trajectory deferred, needs longitudinal storage)
 7. **SPEC-007 — Segmented chat companion (API)**: DONE, first TDD spec — red itest at review, green untouched at done; guided interview, owner-only segments, copy-semantics shares with chain visibility (reviews/SPEC-007-*; UI + LLM provider are follow-up specs)
-8. **SPEC-008 — Hard-metric ingestion**: first system-of-record connector + normalization within org
+8. **SPEC-008 — Hard-metric ingestion**: DONE, TDD — batch gateway with partial success + metric-identity upserts + within-org established-cohort percentiles (reviews/SPEC-008-*; source adapters are follow-ups)
 9. **SPEC-009 — Nudges**: signal-gap detection → feedback requests
 10. **SPEC-010 — Org view (thin)**: team signal health, validation queue dashboard
 

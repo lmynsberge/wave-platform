@@ -64,3 +64,6 @@ Per-handoff commits: process docs (R3, R4, R7; AC3), H01 harness (R1, R2; AC1), 
 
 ### SPEC-007 — Segmented chat companion (TDD)
 Red commit: spec + failing itest (7/7 red, verified in review). Implementation: SPEC-007-H01+H02+H03 single commit (R1–R5; container-session pragmatics), H04 artifacts. Locked test file untouched between red and green — the diff-free window is the TDD proof.
+
+### SPEC-008 — Hard-metric ingestion (TDD)
+Red commit (4/4 right-reason 404s recorded in review per A2) → SPEC-008-H01+H02 core commit (R3, R4) → SPEC-008-H03 server commit (R1, R2, R6) → H04 artifacts. Locked file untouched red→green.

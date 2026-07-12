@@ -1,7 +1,7 @@
 ---
 id: SPEC-008
 title: Hard-metric ingestion & within-org normalization
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [core, server]
