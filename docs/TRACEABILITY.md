@@ -55,3 +55,6 @@ SPEC-###-H##: <summary> (R1, R3; AC2)
 | `4250793` | ISS-002 filed (no docker in agent env) |
 | `65543ef` | ISS-003 filed (env volatility + bundle protocol) |
 | `e77ba17` | ISS-004 filed + resolved (evidence subject lookup, spec A1) |
+
+### SPEC-006 — Individual profile (per-handoff convention active)
+Commits self-describe; roll-up: spec+review commit, then SPEC-006-H01 (R7; AC6), SPEC-006-H02+H03 (R1–R5; AC1, AC2, AC4 — H02/H03 landed together after a container reset forced a node_modules reinstall mid-commit; split preserved in message), SPEC-006-H04 (R8; AC2–AC4).

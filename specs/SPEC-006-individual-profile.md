@@ -1,7 +1,7 @@
 ---
 id: SPEC-006
 title: Individual profile (web)
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server, web]
