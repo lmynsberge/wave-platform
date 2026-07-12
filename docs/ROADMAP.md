@@ -19,7 +19,9 @@ Post-v1 delivered:
 - **SPEC-011 — Companion, nudges & asks UI**: DONE, TDD (red component suites) — thread + two-step share, Give & Grow view
 - **SPEC-012 — Messaging bridge (Slack/Teams)**: DONE, TDD — binding-as-authorization gateway, one-companion-two-doors, Slack v0 HMAC + Teams shared-secret adapters
 
-Remaining for design-partner readiness: LLM companion provider, outbound nudge delivery via bridge, Teams AAD JWT, link-code UI in web settings, SSO, deployment.
+- **SPEC-013 — Outbound nudge delivery**: DONE, TDD — proactive gap check-ins + asks reminders via bridge transports, 7-day dedup, count-only dispatch response
+
+Remaining for design-partner readiness: LLM companion provider (design discussion open), notification opt-out (REQUIRED pre-rollout), Teams AAD JWT, link-code UI in web settings, SSO, deployment, cron for dispatch.
 
 Cross-cutting: **SPEC-QA-001 — spec-locked integration harness**: DONE — itest/ with per-spec black-box files (16 tests, real stack), TDD-from-spec rule active from SPEC-007, lock rule enforced in review.
 

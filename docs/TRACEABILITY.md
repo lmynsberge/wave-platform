@@ -79,3 +79,6 @@ Red commit (missing-module suite failures recorded) → H01+H02+H03 implementati
 
 ### SPEC-012 — Messaging bridge (TDD)
 Red commit (5/5) → H01+H02+H03 implementation commit (incl. companionTurn extraction) → AC6 Slack crypto unit suite → artifacts. Locked file untouched red→green.
+
+### SPEC-013 — Outbound nudge delivery (TDD)
+Red commit (3/3, listener-capture) → H01+H02 implementation commit (R1-R5) → artifacts. Locked file untouched red→green.

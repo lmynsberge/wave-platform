@@ -1,7 +1,7 @@
 ---
 id: SPEC-013
 title: Outbound nudge delivery via the bridge
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]
