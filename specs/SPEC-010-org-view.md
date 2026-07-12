@@ -1,7 +1,7 @@
 ---
 id: SPEC-010
 title: Thin org view — team signal health
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]

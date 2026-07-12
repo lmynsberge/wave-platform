@@ -1,7 +1,7 @@
 ---
 id: SPEC-009
 title: Nudges — signal-gap detection & feedback requests
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]

@@ -67,3 +67,9 @@ Red commit: spec + failing itest (7/7 red, verified in review). Implementation: 
 
 ### SPEC-008 — Hard-metric ingestion (TDD)
 Red commit (4/4 right-reason 404s recorded in review per A2) → SPEC-008-H01+H02 core commit (R3, R4) → SPEC-008-H03 server commit (R1, R2, R6) → H04 artifacts. Locked file untouched red→green.
+
+### SPEC-009 — Nudges (TDD)
+Red commit (5/5, two test-design fixes made PRE-lock and noted in review) → H01+H02+H03 implementation commit (R1–R6) → artifacts. Locked file untouched red→green.
+
+### SPEC-010 — Thin org view (TDD)
+Red commit (4/4) → SPEC-010-H01 (R1–R5, closed schema) → artifacts. Locked file untouched red→green.
