@@ -1,7 +1,7 @@
 ---
 id: SPEC-004
 title: Significance engine
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [core, server]
@@ -31,6 +31,7 @@ Validation POST (SPEC-003) unchanged externally; server now computes and forward
 ### 4.2 Core interface
 - POST /v1/evidence/:id/validations body gains required `validatorRelationship`: "peer"|"manager_chain" → 400 `invalid_relationship` otherwise
 - GET /v1/users/:userId/attributes?orgId= → attributes[]: {key,name,kind,evidenceCount,distinctAuthors,validations{yes,no,noSignal},distinctValidators,status,score:number|null}
+- GET /v1/evidence/:id → 200 {id, orgId, subjectUserId, authorUserId, kind} | 404 (ISS-004 / A1: server-internal read to compute validator relationship)
 - GET /v1/signal-policy → 200 {subjective:{emerging:{minEvidence:5,minAuthors:3},established:{minValidators:5}},objective:{emerging:{minDatapoints:1},established:{minDatapoints:3}}}
 ### 4.3 Data model
 ALTER core.validations ADD validator_relationship text NOT NULL DEFAULT 'peer' CHECK IN ('peer','manager_chain'). Migration 002.
@@ -55,4 +56,4 @@ Cross-org normalization, cohort normalization, materialized signal state, thresh
 H01 (core): migration 002 + relationship in validation write; H02 (core): significance computation in summary + policy endpoint; H03 (server): relationship computation + forward; H04: cross-suite AC tests.
 
 ## Amendments
-None.
+- A1 (via ISS-004): added GET /v1/evidence/:id to core contract so the server can compute validator relationship without spoofable client input. Fast-track re-reviewed: approved.

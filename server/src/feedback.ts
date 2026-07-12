@@ -98,8 +98,18 @@ export function registerFeedbackRoutes(app: FastifyInstance, pool: Pool, core: C
     const parsed = validationSchema.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_body" });
 
+    // SPEC-004 R5 (+A1/ISS-004): fetch the evidence subject from core, compute the
+    // validator relationship server-side (never client-supplied).
+    const ev = await coreRequest(core, "GET", `/v1/evidence/${evidenceId}`);
+    if (!ev) return reply.status(502).send({ error: "core_unreachable" });
+    if (ev.status !== 200) return reply.status(ev.status).send(ev.json);
+    const subjectUserId = (ev.json as { subjectUserId: string }).subjectUserId;
+    const relationship = (await isManagerOf(pool, orgId, user.id, subjectUserId))
+      ? "manager_chain"
+      : "peer";
+
     const res = await coreRequest(core, "POST", `/v1/evidence/${evidenceId}/validations`, {
-      validatorUserId: user.id, outcome: parsed.data.outcome,
+      validatorUserId: user.id, outcome: parsed.data.outcome, validatorRelationship: relationship,
     });
     if (!res) return reply.status(502).send({ error: "core_unreachable" });
     if (res.status === 201) return reply.status(201).send({ validation: res.json });

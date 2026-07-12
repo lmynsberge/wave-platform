@@ -18,6 +18,9 @@ cycle: 1
 4. (minor) Read-time computation is fine at v1 scale; materialization is correctly out of scope.
 5. (nit) Policy endpoint aids invariant transparency; good.
 
+## Re-review (cycle 2, delta only — ISS-004/A1)
+GET /v1/evidence/:id: read-only, exposes only fields the server already handles, no invariant impact. `approved`.
+
 ## Checklist results
 - [x] Traceable to brief (significance-as-gatekeeper; drop-not-negative)
 - [x] Trust invariants 1,2,5 mechanically enforced; 3,4 N/A

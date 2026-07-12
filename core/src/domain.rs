@@ -40,6 +40,7 @@ pub struct CreateEvidence {
 pub struct CreateValidation {
     validator_user_id: Uuid,
     outcome: String,
+    validator_relationship: String,
 }
 
 #[derive(Deserialize)]
@@ -52,8 +53,10 @@ pub fn routes(pool: Pool) -> Router {
     Router::new()
         .route("/v1/attributes", post(create_attribute).get(list_attributes))
         .route("/v1/evidence", post(create_evidence))
+        .route("/v1/evidence/:id", get(get_evidence))
         .route("/v1/evidence/:id/validations", post(create_validation))
         .route("/v1/users/:user_id/attributes", get(user_attribute_summary))
+        .route("/v1/signal-policy", get(signal_policy))
         .with_state(pool)
 }
 
@@ -145,6 +148,26 @@ async fn create_evidence(State(pool): State<Pool>, Json(body): Json<CreateEviden
     ))
 }
 
+async fn get_evidence(State(pool): State<Pool>, Path(id): Path<Uuid>) -> ApiResult {
+    let client = pool.get().await.map_err(internal)?;
+    let row = client
+        .query_opt(
+            "SELECT id, org_id, subject_user_id, author_user_id, kind FROM core.evidence WHERE id = $1",
+            &[&id],
+        )
+        .await
+        .map_err(internal)?
+        .ok_or_else(|| err(StatusCode::NOT_FOUND, "not_found"))?;
+    Ok((
+        StatusCode::OK,
+        Json(json!({
+            "id": row.get::<_, Uuid>(0), "orgId": row.get::<_, Uuid>(1),
+            "subjectUserId": row.get::<_, Uuid>(2), "authorUserId": row.get::<_, Option<Uuid>>(3),
+            "kind": row.get::<_, String>(4)
+        })),
+    ))
+}
+
 async fn create_validation(
     State(pool): State<Pool>,
     Path(evidence_id): Path<Uuid>,
@@ -152,6 +175,9 @@ async fn create_validation(
 ) -> ApiResult {
     if !["yes", "no", "no_signal"].contains(&body.outcome.as_str()) {
         return Err(err(StatusCode::BAD_REQUEST, "invalid_outcome"));
+    }
+    if !["peer", "manager_chain"].contains(&body.validator_relationship.as_str()) {
+        return Err(err(StatusCode::BAD_REQUEST, "invalid_relationship"));
     }
     let client = pool.get().await.map_err(internal)?;
     let ev = client
@@ -179,9 +205,9 @@ async fn create_validation(
 
     let row = client
         .query_one(
-            "INSERT INTO core.validations(evidence_id, validator_user_id, outcome)
-             VALUES ($1,$2,$3) ON CONFLICT (evidence_id, validator_user_id) DO NOTHING RETURNING id",
-            &[&evidence_id, &body.validator_user_id, &body.outcome],
+            "INSERT INTO core.validations(evidence_id, validator_user_id, outcome, validator_relationship)
+             VALUES ($1,$2,$3,$4) ON CONFLICT (evidence_id, validator_user_id) DO NOTHING RETURNING id",
+            &[&evidence_id, &body.validator_user_id, &body.outcome, &body.validator_relationship],
         )
         .await;
     match row {
@@ -196,7 +222,69 @@ async fn create_validation(
     }
 }
 
-/// SPEC-003 R6: status is ALWAYS "insufficient_signal" until SPEC-004 (trust invariant 2).
+/// SPEC-004: significance engine. Status/score computed at read time.
+/// INVARIANT 1: manager_chain 'no' outcomes are DROPPED from counted_no.
+/// INVARIANT 2: score is null below `established`.
+/// INVARIANT 5: zero-evidence attributes are simply absent (absence is neutral).
+pub struct Policy {
+    pub subj_emerging_min_evidence: i64,
+    pub subj_emerging_min_authors: i64,
+    pub subj_established_min_validators: i64,
+    pub obj_emerging_min: i64,
+    pub obj_established_min: i64,
+}
+pub const POLICY: Policy = Policy {
+    subj_emerging_min_evidence: 5,
+    subj_emerging_min_authors: 3,
+    subj_established_min_validators: 5,
+    obj_emerging_min: 1,
+    obj_established_min: 3,
+};
+
+async fn signal_policy() -> Json<Value> {
+    Json(json!({
+        "subjective": {
+            "emerging": { "minEvidence": POLICY.subj_emerging_min_evidence, "minAuthors": POLICY.subj_emerging_min_authors },
+            "established": { "minValidators": POLICY.subj_established_min_validators }
+        },
+        "objective": {
+            "emerging": { "minDatapoints": POLICY.obj_emerging_min },
+            "established": { "minDatapoints": POLICY.obj_established_min }
+        }
+    }))
+}
+
+fn compute_status_score(
+    kind: &str, evidence_count: i64, distinct_authors: i64, distinct_validators: i64,
+    yes: i64, counted_no: i64, mean_value: Option<f64>,
+) -> (&'static str, Option<f64>) {
+    match kind {
+        "objective" => {
+            if evidence_count >= POLICY.obj_established_min {
+                ("established", mean_value)
+            } else if evidence_count >= POLICY.obj_emerging_min {
+                ("emerging", None)
+            } else {
+                ("insufficient_signal", None)
+            }
+        }
+        _ => {
+            let emerging = evidence_count >= POLICY.subj_emerging_min_evidence
+                && distinct_authors >= POLICY.subj_emerging_min_authors;
+            if !emerging {
+                return ("insufficient_signal", None);
+            }
+            // §5: established additionally requires at least one countable validation
+            if distinct_validators >= POLICY.subj_established_min_validators && (yes + counted_no) >= 1 {
+                let score = 100.0 * yes as f64 / (yes + counted_no) as f64;
+                ("established", Some(score))
+            } else {
+                ("emerging", None)
+            }
+        }
+    }
+}
+
 async fn user_attribute_summary(
     State(pool): State<Pool>,
     Path(user_id): Path<Uuid>,
@@ -206,10 +294,14 @@ async fn user_attribute_summary(
     let rows = client
         .query(
             "SELECT a.key, a.name, a.kind,
-                    count(e.id) AS evidence_count,
+                    count(DISTINCT e.id) AS evidence_count,
+                    count(DISTINCT e.author_user_id) AS distinct_authors,
                     count(v.id) FILTER (WHERE v.outcome = 'yes') AS yes,
-                    count(v.id) FILTER (WHERE v.outcome = 'no') AS no,
-                    count(v.id) FILTER (WHERE v.outcome = 'no_signal') AS no_signal
+                    count(v.id) FILTER (WHERE v.outcome = 'no') AS no_all,
+                    count(v.id) FILTER (WHERE v.outcome = 'no' AND v.validator_relationship <> 'manager_chain') AS counted_no,
+                    count(v.id) FILTER (WHERE v.outcome = 'no_signal') AS no_signal,
+                    count(DISTINCT v.validator_user_id) AS distinct_validators,
+                    avg(e.value_numeric) AS mean_value
              FROM core.evidence e
              JOIN core.attributes a ON a.id = e.attribute_id
              LEFT JOIN core.validations v ON v.evidence_id = e.id
@@ -222,11 +314,24 @@ async fn user_attribute_summary(
     let list: Vec<Value> = rows
         .iter()
         .map(|r| {
+            let kind: String = r.get(2);
+            let evidence_count: i64 = r.get(3);
+            let distinct_authors: i64 = r.get(4);
+            let yes: i64 = r.get(5);
+            let no_all: i64 = r.get(6);
+            let counted_no: i64 = r.get(7);
+            let no_signal: i64 = r.get(8);
+            let distinct_validators: i64 = r.get(9);
+            let mean_value: Option<f64> = r.get(10);
+            let (status, score) = compute_status_score(
+                &kind, evidence_count, distinct_authors, distinct_validators, yes, counted_no, mean_value,
+            );
             json!({
-                "key": r.get::<_, String>(0), "name": r.get::<_, String>(1), "kind": r.get::<_, String>(2),
-                "evidenceCount": r.get::<_, i64>(3),
-                "validations": { "yes": r.get::<_, i64>(4), "no": r.get::<_, i64>(5), "noSignal": r.get::<_, i64>(6) },
-                "status": "insufficient_signal"
+                "key": r.get::<_, String>(0), "name": r.get::<_, String>(1), "kind": kind,
+                "evidenceCount": evidence_count, "distinctAuthors": distinct_authors,
+                "validations": { "yes": yes, "no": no_all, "noSignal": no_signal },
+                "distinctValidators": distinct_validators,
+                "status": status, "score": score
             })
         })
         .collect();

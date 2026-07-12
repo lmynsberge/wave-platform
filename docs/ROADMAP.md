@@ -5,7 +5,7 @@ Ordering follows the v1 scope layers in PROJECT_BRIEF.md. Each item becomes one 
 1. **SPEC-001 — Foundation & walking skeleton**: DONE (see reviews/SPEC-001-*). Delivered via ISS-001 workaround.
 2. **SPEC-002 — Identity & tenancy**: DONE (auth, orgs, RBAC edge, reporting chain; reviews/SPEC-002-*).
 3. **SPEC-003 — Attribute taxonomy & evidence model**: DONE — attributes/evidence/validations in core, structural rules, invariant-1 manager gate in server (reviews/SPEC-003-*)
-4. **SPEC-004 — Significance engine**: thresholds, diversity requirements, signal states, absence-as-neutral
+4. **SPEC-004 — Significance engine**: DONE — signal states, diversity-gated thresholds, drop-not-negative manager semantics, policy endpoint (reviews/SPEC-004-*)
 5. **SPEC-005 — Feedback capture & validation flows**: peer feedback, yes/no/no-signal validation, manager queue, upward chaining
 6. **SPEC-006 — Individual profile**: attributes, signal status, trajectory views
 7. **SPEC-007 — Segmented chat companion**: private/shared segments, interview-style reflection (journaling DNA), share-forward flow

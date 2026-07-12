@@ -8,7 +8,11 @@ const TEST_DB_URL = "postgres://wave:wave@localhost:5432/wave_fb_test";
 const pool = createPool(TEST_DB_URL);
 
 /** Fake core: implements just enough of SPEC-003 §4.2 to test the proxy. */
-const store = { evidence: new Map<string, { author: string; subject: string }>(), seq: 0 };
+const store = {
+  evidence: new Map<string, { author: string; subject: string; org: string }>(),
+  seq: 0,
+  lastValidation: null as null | { validatorRelationship: string; outcome: string },
+};
 const fakeCore: typeof fetch = async (input, init) => {
   const url = String(input);
   const body = init?.body ? JSON.parse(String(init.body)) : {};
@@ -16,8 +20,14 @@ const fakeCore: typeof fetch = async (input, init) => {
     new Response(JSON.stringify(json), { status, headers: { "content-type": "application/json" } });
   if (url.endsWith("/v1/evidence") && init?.method === "POST") {
     const id = `ev-${++store.seq}`;
-    store.evidence.set(id, { author: body.authorUserId, subject: body.subjectUserId });
+    store.evidence.set(id, { author: body.authorUserId, subject: body.subjectUserId, org: body.orgId });
     return respond(201, { id, ...body });
+  }
+  const single = url.match(/\/v1\/evidence\/([^/?]+)$/);
+  if (single && (init?.method ?? "GET") === "GET") {
+    const ev = store.evidence.get(single[1]!);
+    if (!ev) return respond(404, { error: "not_found" });
+    return respond(200, { id: single[1], orgId: ev.org, subjectUserId: ev.subject, authorUserId: ev.author, kind: "subjective" });
   }
   const val = url.match(/\/v1\/evidence\/([^/]+)\/validations$/);
   if (val && init?.method === "POST") {
@@ -25,6 +35,7 @@ const fakeCore: typeof fetch = async (input, init) => {
     if (!ev) return respond(404, { error: "not_found" });
     if (body.validatorUserId === ev.author) return respond(400, { error: "own_evidence" });
     if (body.validatorUserId === ev.subject) return respond(400, { error: "own_subject" });
+    store.lastValidation = { validatorRelationship: body.validatorRelationship, outcome: body.outcome };
     return respond(201, { id: "v-1", evidenceId: val[1], outcome: body.outcome });
   }
   if (/\/v1\/users\/.+\/attributes\?orgId=/.test(url)) {
@@ -122,6 +133,25 @@ describe("AC4: validations via proxy", () => {
 
     const ok = await app.inject({ ...base, headers: { cookie: mgr.cookie }, payload: { outcome: "yes" } });
     expect(ok.statusCode).toBe(201);
+    // AC6: mgr is in ic1's chain → relationship forwarded as manager_chain
+    expect(store.lastValidation?.validatorRelationship).toBe("manager_chain");
+
+    const peerV = await app.inject({ ...base, headers: { cookie: ceo.cookie }, payload: { outcome: "no_signal" } });
+    expect(peerV.statusCode).toBe(201);
+    expect(store.lastValidation?.validatorRelationship).toBe("manager_chain"); // ceo transitive
+
+    const fb2 = await app.inject({
+      method: "POST", url: `/api/orgs/${orgId}/feedback`, headers: { cookie: ic1.cookie },
+      payload: { subjectUserId: ic2.id, attributeKey: "leadership", note: "great pairing" },
+    });
+    const ev2 = fb2.json().evidence.id as string;
+    const p = await app.inject({
+      method: "POST", url: `/api/orgs/${orgId}/feedback/${ev2}/validations`,
+      headers: { cookie: mgr.cookie }, payload: { outcome: "yes" },
+    });
+    expect(p.statusCode).toBe(201);
+    // mgr is NOT in ic2's chain (ic2 has no manager) → peer
+    expect(store.lastValidation?.validatorRelationship).toBe("peer");
 
     const bad = await app.inject({ ...base, headers: { cookie: mgr.cookie }, payload: { outcome: "definitely" } });
     expect(bad.statusCode).toBe(400);
