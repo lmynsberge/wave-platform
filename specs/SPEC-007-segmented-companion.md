@@ -1,7 +1,7 @@
 ---
 id: SPEC-007
 title: Segmented chat companion (API)
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]

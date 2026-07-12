@@ -61,3 +61,6 @@ Commits self-describe; roll-up: spec+review commit, then SPEC-006-H01 (R7; AC6),
 
 ### SPEC-QA-001 — Spec-locked integration harness
 Per-handoff commits: process docs (R3, R4, R7; AC3), H01 harness (R1, R2; AC1), H02 backfill 001–003 (R5; AC2, AC5), H03+H04 backfill 004–006 + CI (R5, R6; AC2, AC4).
+
+### SPEC-007 — Segmented chat companion (TDD)
+Red commit: spec + failing itest (7/7 red, verified in review). Implementation: SPEC-007-H01+H02+H03 single commit (R1–R5; container-session pragmatics), H04 artifacts. Locked test file untouched between red and green — the diff-free window is the TDD proof.

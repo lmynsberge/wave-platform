@@ -8,7 +8,7 @@ Ordering follows the v1 scope layers in PROJECT_BRIEF.md. Each item becomes one 
 4. **SPEC-004 — Significance engine**: DONE — signal states, diversity-gated thresholds, drop-not-negative manager semantics, policy endpoint (reviews/SPEC-004-*)
 5. **SPEC-005 — Feedback capture & validation flows**: DONE — validation queue, inbox, manager assessments with pending_upward state + upward decisions (reviews/SPEC-005-*)
 6. **SPEC-006 — Individual profile**: DONE — auth+shell, attribute cards with policy-driven signal meter, inbox panel, invariant render tests (reviews/SPEC-006-*; trajectory deferred, needs longitudinal storage)
-7. **SPEC-007 — Segmented chat companion**: private/shared segments, interview-style reflection (journaling DNA), share-forward flow
+7. **SPEC-007 — Segmented chat companion (API)**: DONE, first TDD spec — red itest at review, green untouched at done; guided interview, owner-only segments, copy-semantics shares with chain visibility (reviews/SPEC-007-*; UI + LLM provider are follow-up specs)
 8. **SPEC-008 — Hard-metric ingestion**: first system-of-record connector + normalization within org
 9. **SPEC-009 — Nudges**: signal-gap detection → feedback requests
 10. **SPEC-010 — Org view (thin)**: team signal health, validation queue dashboard
