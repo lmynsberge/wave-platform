@@ -12,7 +12,8 @@ cycle: 1
 `approved`
 
 ## Findings
-
+- 2/2 component tests: ok + degraded states from mocked fetch
+- tsc --noEmit clean; TanStack Query per standards; degraded state exposed via role=alert
 
 ## Checklist results
 - [x] Acceptance criteria met (see findings for env-related substitutions)

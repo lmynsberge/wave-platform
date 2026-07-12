@@ -12,7 +12,9 @@ cycle: 1
 `approved`
 
 ## Findings
-
+- 3/3 vitest pass incl. 200 combined shape and 502 degraded contract (core mocked via injected fetch)
+- tsc --noEmit clean, strict mode, no `any`
+- CORS dev-only per spec §5; 2s timeout via AbortController
 
 ## Checklist results
 - [x] Acceptance criteria met (see findings for env-related substitutions)

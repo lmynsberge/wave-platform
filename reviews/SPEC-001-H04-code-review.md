@@ -12,7 +12,9 @@ cycle: 1
 `approved`
 
 ## Findings
-
+- compose per spec R6 (postgres healthcheck, CORE_URL wiring, documented ports)
+- CI: three path-scoped jobs — core fmt+clippy+test; server/web tsc+vitest
+- AC1/AC2 verified natively per ISS-002 workaround: smoke.sh OK against live core+server; core killed → 502 exact degraded shape. Literal `docker compose up` pending one human run post-push.
 
 ## Checklist results
 - [x] Acceptance criteria met (see findings for env-related substitutions)
