@@ -1,9 +1,13 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import { registerAuthRoutes } from "./auth.js";
+import type { Pool } from "./db.js";
+import { registerOrgRoutes } from "./orgs.js";
 
 export interface AppOptions {
   coreUrl: string;
   fetchImpl?: typeof fetch;
+  pool?: Pool;
 }
 
 export function buildApp(opts: AppOptions) {
@@ -33,6 +37,11 @@ export function buildApp(opts: AppOptions) {
         .send({ server: "ok", core: null, error: "core_unreachable" });
     }
   });
+
+  if (opts.pool) {
+    registerAuthRoutes(app, opts.pool);
+    registerOrgRoutes(app, opts.pool);
+  }
 
   return app;
 }

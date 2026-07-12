@@ -19,6 +19,14 @@ jobs:
   server:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: server } }
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: wave, POSTGRES_PASSWORD: wave, POSTGRES_DB: wave }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wave" --health-interval 5s
+          --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
