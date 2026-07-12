@@ -5,6 +5,7 @@ import { registerFeedbackRoutes } from "./feedback.js";
 import { registerCompanionRoutes } from "./companion.js";
 import { registerFlowRoutes } from "./flows.js";
 import { registerIngestRoutes } from "./ingest.js";
+import { registerNudgeRoutes } from "./nudges.js";
 import type { Pool } from "./db.js";
 import { registerOrgRoutes } from "./orgs.js";
 
@@ -49,6 +50,7 @@ export function buildApp(opts: AppOptions) {
     registerFlowRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerCompanionRoutes(app, opts.pool);
     registerIngestRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
+    registerNudgeRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
   }
 
   return app;
