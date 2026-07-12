@@ -76,7 +76,7 @@ describe("SPEC-011 AC5: pending send", () => {
     const input = await screen.findByLabelText(/message/i);
     fireEvent.change(input, { target: { value: "hello" } });
     fireEvent.click(screen.getByRole("button", { name: /send/i }));
-    expect((input as HTMLInputElement).disabled).toBe(true);
+    await vi.waitFor(() => expect((input as HTMLInputElement).disabled).toBe(true));
     resolveReply!(new Response(JSON.stringify({ reply: { id: "m4", role: "companion", content: "next?", seq: 4 } }), { status: 201, headers: { "content-type": "application/json" } }));
   });
 });

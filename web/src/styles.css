@@ -55,3 +55,14 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .inbox .item { border-top: 1px solid var(--line); padding: 10px 0; font-size: 13px; }
 .inbox .meta { font-family: var(--mono); font-size: 11px; color: var(--quiet); display: flex; gap: 8px; }
 .banner { background: var(--tide-soft); color: var(--tide); border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 12px; }
+
+.views { display: flex; flex-direction: column; gap: 6px; }
+.thread { display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 78%; padding: 10px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.msg.user { align-self: flex-end; background: var(--tide-soft); border-color: transparent; }
+.msg.synthesis { border-left: 3px solid var(--tide); white-space: pre-line; }
+.composer { display: flex; gap: 8px; margin-top: 14px; }
+.composer input { flex: 1; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+.grow section + section { margin-top: 22px; }
+.grow textarea { width: 100%; min-height: 64px; border: 1px solid var(--line); border-radius: 8px; font: inherit; padding: 8px 10px; margin: 8px 0; }
+.suggested { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
