@@ -88,6 +88,24 @@ async function answersSinceSynthesis(pool: Pool, segId: string): Promise<string[
   return answers;
 }
 
+/** Reusable turn engine (SPEC-012 R4: one companion, many doors). */
+export async function companionTurn(pool: Pool, orgId: string, userId: string, content: string): Promise<string> {
+  const segId = await ensureSegment(pool, orgId, userId);
+  const answers = await answersSinceSynthesis(pool, segId);
+  const replyText = provider().reply(answers, content);
+  await pool.query(
+    `INSERT INTO chat_messages(segment_id, role, content, seq)
+     VALUES ($1,'user',$2,(SELECT coalesce(max(seq),0)+1 FROM chat_messages WHERE segment_id = $1))`,
+    [segId, content],
+  );
+  await pool.query(
+    `INSERT INTO chat_messages(segment_id, role, content, seq)
+     VALUES ($1,'companion',$2,(SELECT coalesce(max(seq),0)+1 FROM chat_messages WHERE segment_id = $1))`,
+    [segId, replyText],
+  );
+  return replyText;
+}
+
 const msgSchema = z.object({ content: z.string().min(1) });
 const shareSchema = z.object({ messageId: z.string().uuid() });
 
