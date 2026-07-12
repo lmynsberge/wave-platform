@@ -3,6 +3,7 @@
 ## All workstreams
 - Contract-first: types generated from the spec's contracts; no hand-drift
 - Tests accompany every handoff; no merge without passing CI
+- Server-owned migrations: drizzle, knex, or plain SQL files with an idempotent node runner (SPEC-002 A1)
 - Small PRs = one handoff. Branch: `spec-###/h##-<slug>`
 - No secrets in repo. `.env.example` documents required env
 
