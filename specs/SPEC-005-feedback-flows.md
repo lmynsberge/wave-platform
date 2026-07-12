@@ -1,7 +1,7 @@
 ---
 id: SPEC-005
 title: Feedback capture & validation flows
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [core, server]

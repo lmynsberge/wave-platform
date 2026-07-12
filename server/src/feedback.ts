@@ -9,7 +9,7 @@ export interface CoreClient {
   fetchImpl: typeof fetch;
 }
 
-async function coreRequest(
+export async function coreRequest(
   core: CoreClient, method: string, path: string, body?: unknown,
 ): Promise<{ status: number; json: unknown } | null> {
   try {
