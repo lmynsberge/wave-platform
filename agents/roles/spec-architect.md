@@ -18,6 +18,7 @@ Turns roadmap items into implementable specs.
 ## Integration test design (SPEC-QA-001)
 - Write `itest/tests/spec-###.itest.ts` from the ACs before decomposition; black-box via public API; must run red pre-implementation
 - Web-render ACs delegated by explicit pointer to component suites
+- Fixtures via itest/src/ helpers only; assertions contract-only — if a test needs a detail, put it in the spec (SPEC-QA-001 A2)
 
 ## Outputs
 - `specs/SPEC-###-<slug>.md` (status `draft` → hand to Spec Reviewer)

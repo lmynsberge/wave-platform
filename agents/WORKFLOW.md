@@ -11,7 +11,7 @@
 
 ## 1b. Integration test design (TDD — from SPEC-007 onward)
 
-Before decomposition, the Spec Architect writes `itest/tests/spec-###.itest.ts` implementing the spec's acceptance criteria as black-box tests against the public API (function signatures and helper design count as design work). The file must compile and run RED against the unimplemented system. The Spec Reviewer verifies red-ness and AC coverage as part of spec review.
+Before decomposition, the Spec Architect writes `itest/tests/spec-###.itest.ts` implementing the spec's acceptance criteria as black-box tests against the public API (function signatures and helper design count as design work). The file must compile and run RED against the unimplemented system, red FOR THE RIGHT REASON: the reviewer verifies the failure messages (missing route/contract, not harness defects) and records them in the review (SPEC-QA-001 A2). Cross-spec fixtures go through itest/src/ helpers — locked files assert only their own spec's contracts, and assertions may rely only on spec-stated details.
 
 **LOCK RULE (SPEC-QA-001 R3):** files under `itest/tests/` change ONLY with a reviewed spec amendment or new spec. A commit touching them must reference the spec/amendment ID; reviewers reject violations. Unit/component tests remain free to evolve.
 

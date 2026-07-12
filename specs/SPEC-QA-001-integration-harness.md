@@ -48,3 +48,4 @@ This spec's own integration test is the harness booting and the six backfill fil
 
 ## Amendments
 - A1: SPEC-QA-### namespace (R7).
+- A2 (post-SPEC-007 retrospective, Orchestrator-approved): (1) RED-FOR-THE-RIGHT-REASON — spec review must verify failure MESSAGES, not just counts, and record them in the review. (2) FIXTURE HELPERS — cross-spec setup lives in itest/src/ (unlocked, evolvable); locked test files assert only their own spec's contracts and build fixtures exclusively through helpers. (3) CONTRACT-ONLY ASSERTIONS — an itest may depend only on details the spec states; if an assertion needs a detail, the spec gains it (as SPEC-007 §4.4 did for the question list).

@@ -58,3 +58,22 @@ export async function seedAttribute(key: string, kind: "objective" | "subjective
     body: JSON.stringify({ key, name: key, kind }),
   });
 }
+
+/** A2 fixture helper: org with a reporting chain, built through public APIs only. */
+export async function orgWithChain(slugPrefix: string, memberSpecs: Array<{ name: string; role?: "member" | "admin" }>) {
+  const owner = await signupUser(`${slugPrefix}-owner`);
+  const org = await owner.c.json<{ org: { id: string } }>("/api/orgs", post({ name: slugPrefix, slug: uniq(slugPrefix) }));
+  const orgId = org.body.org.id;
+  const members: Record<string, Awaited<ReturnType<typeof signupUser>>> = {};
+  for (const m of memberSpecs) {
+    const u = await signupUser(`${slugPrefix}-${m.name}`);
+    await owner.c.json(`/api/orgs/${orgId}/members`, post({ userId: u.id, role: m.role ?? "member" }));
+    members[m.name] = u;
+  }
+  const setManager = (userName: string, managerName: string | null) =>
+    owner.c.json(`/api/orgs/${orgId}/reporting`, put({
+      userId: members[userName]!.id,
+      managerId: managerName ? members[managerName]!.id : null,
+    }));
+  return { orgId, owner, members, setManager };
+}
