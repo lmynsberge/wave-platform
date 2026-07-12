@@ -56,6 +56,7 @@ export async function setup() {
       DATABASE_URL: SERVER_DB,
       CORE_URL: `http://127.0.0.1:${CORE_PORT}`,
       PORT: String(SERVER_PORT),
+      BRIDGE_TEST_SECRET: "itest-bridge-secret",
     },
     stdio: "ignore",
   });
