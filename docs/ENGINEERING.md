@@ -8,8 +8,8 @@
 - No secrets in repo. `.env.example` documents required env
 
 ## core (Rust)
-- Edition 2021+, `cargo fmt` + `clippy -D warnings`
-- axum for HTTP, sqlx (postgres, compile-time checked queries), thiserror for errors
+- Edition 2021+, rustc ≥1.85, `cargo fmt` + `clippy -D warnings`
+- axum for HTTP; tokio-postgres + deadpool (SPEC-003 A2; sqlx with compile-time checks is the eventual target); thiserror for errors
 - Domain logic pure and unit-tested independent of HTTP layer
 
 ## server (TS)

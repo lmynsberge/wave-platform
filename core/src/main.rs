@@ -1,38 +1,28 @@
-use axum::{routing::get, Json, Router};
-use serde_json::{json, Value};
-
-pub fn app() -> Router {
-    Router::new()
-        .route("/health", get(health))
-        .route("/v1/ping", get(ping))
-}
-
-async fn health() -> Json<Value> {
-    Json(json!({ "status": "ok" }))
-}
-
-async fn ping() -> Json<Value> {
-    Json(json!({ "service": "core", "status": "ok" }))
-}
+use wave_core::{app_with_db, db};
 
 #[tokio::main]
 async fn main() {
     let port = std::env::var("CORE_PORT").unwrap_or_else(|_| "8081".to_string());
     let addr = format!("0.0.0.0:{port}");
+    let pool = db::create_pool(&db::database_url());
+    db::migrate(&pool, "migrations").await.expect("migration failure");
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .expect("failed to bind");
     println!("wave-core listening on {addr}");
-    axum::serve(listener, app()).await.expect("server error");
+    axum::serve(listener, app_with_db(pool))
+        .await
+        .expect("server error");
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use http_body_util::BodyExt;
+    use serde_json::{json, Value};
     use tower::ServiceExt;
+    use wave_core::app;
 
     async fn get_json(path: &str) -> (StatusCode, Value) {
         let res = app()
