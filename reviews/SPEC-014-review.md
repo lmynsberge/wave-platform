@@ -19,6 +19,9 @@ cycle: 1
 5. (minor) Follow-up state derived from message history (§5) avoids a new state column; provider-coupling reduced not increased.
 6. (minor) Fail-closed per-turn (R6) means a flaky self-hosted model degrades to guided per message — the interview is unkillable.
 
+## Delta re-review (cycle 2 — ISS-005/A1)
+One setup turn added to AC4; assertions untouched; sequence now R3-legal. `approved`.
+
 ## Checklist results
 - [x] Red verified with reasons + red-quality repair recorded (A2)
 - [x] Contract-only; helper fixtures; delegations pointed (AC7 → SPEC-007 itest)

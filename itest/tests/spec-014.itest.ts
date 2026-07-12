@@ -80,6 +80,9 @@ describe("SPEC-014 AC2: redaction on the wire", () => {
 describe("SPEC-014 AC4: fail-closed to guided", () => {
   it("LLM 500 → the turn yields the guided next question, not an error — and the LLM WAS attempted", async () => {
     const alice = fx.members.alice!;
+    // SPEC-014 A1 (ISS-005): answer the pending follow-up first so the probe is a skeleton answer per R3
+    script = [];
+    await say(alice, "closing out the earlier thread");
     captured.length = 0;
     script = [{ status: 500 }];
     const r = await say(alice, "shipped the ingestion gateway");

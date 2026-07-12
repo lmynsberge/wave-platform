@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { currentUser } from "./auth.js";
+import { buildRedactor, resolveLlm, type LlmMessage } from "./llm.js";
 import type { Pool } from "./db.js";
 
 /**
@@ -17,7 +18,7 @@ export interface CompanionProvider {
 }
 
 /** Deterministic guided provider — the journaling interview (SPEC-007 §4.4). */
-const QUESTIONS = [
+export const QUESTIONS = [
   "How are you arriving today — what's your energy and mood?",
   "What's on your mind when you look back at this stretch of work?",
   "What did you ship or move forward?",
@@ -27,23 +28,27 @@ const QUESTIONS = [
   "If you changed one thing about how you work next week, what would it be?",
 ] as const;
 
+export function deterministicSynthesis(answers: string[]): string {
+  const [mood, reflection, shipped, learned, hard, people, change] = answers;
+  return [
+    "Here's your reflection, in your own words:",
+    `Arriving: ${mood}`,
+    `On your mind: ${reflection}`,
+    `Shipped: ${shipped}`,
+    `Learned: ${learned}`,
+    `Hard: ${hard}`,
+    `People: ${people}`,
+    `One change: ${change}`,
+  ].join("\n");
+}
+
 export const guidedProvider: CompanionProvider = {
   opening: () => QUESTIONS[0],
   reply(answers, latest) {
     const all = [...answers, latest];
     if (all.length < QUESTIONS.length) return QUESTIONS[all.length]!;
     // Synthesis: weave the user's own words (§4.4)
-    const [mood, reflection, shipped, learned, hard, people, change] = all;
-    return [
-      "Here's your reflection, in your own words:",
-      `Arriving: ${mood}`,
-      `On your mind: ${reflection}`,
-      `Shipped: ${shipped}`,
-      `Learned: ${learned}`,
-      `Hard: ${hard}`,
-      `People: ${people}`,
-      `One change: ${change}`,
-    ].join("\n");
+    return deterministicSynthesis(all);
   },
 };
 
@@ -88,11 +93,72 @@ async function answersSinceSynthesis(pool: Pool, segId: string): Promise<string[
   return answers;
 }
 
-/** Reusable turn engine (SPEC-012 R4: one companion, many doors). */
+/** Interview state derived from history (SPEC-014 §5): skeleton answers vs follow-up answers. */
+async function interviewState(pool: Pool, segId: string): Promise<{ skeletonAnswers: string[]; lastWasFollowup: boolean }> {
+  const { rows } = await pool.query(
+    "SELECT role, content FROM chat_messages WHERE segment_id = $1 ORDER BY seq", [segId],
+  );
+  const skeletonAnswers: string[] = [];
+  let lastCompanionWasSkeleton = false;
+  let lastCompanionWasFollowup = false;
+  for (const r of rows as Array<{ role: string; content: string }>) {
+    if (r.role === "companion") {
+      if (r.content.startsWith("Here's your reflection")) {
+        skeletonAnswers.length = 0;
+        lastCompanionWasSkeleton = false; lastCompanionWasFollowup = false;
+      } else if ((QUESTIONS as readonly string[]).includes(r.content)) {
+        lastCompanionWasSkeleton = true; lastCompanionWasFollowup = false;
+      } else {
+        lastCompanionWasFollowup = true; lastCompanionWasSkeleton = false;
+      }
+    } else if (lastCompanionWasSkeleton) {
+      skeletonAnswers.push(r.content);
+    }
+  }
+  return { skeletonAnswers, lastWasFollowup: lastCompanionWasFollowup };
+}
+
+/** Reusable HYBRID turn engine (SPEC-012 one-companion-many-doors; SPEC-014 R3-R6). */
 export async function companionTurn(pool: Pool, orgId: string, userId: string, content: string): Promise<string> {
   const segId = await ensureSegment(pool, orgId, userId);
-  const answers = await answersSinceSynthesis(pool, segId);
-  const replyText = provider().reply(answers, content);
+  const state = await interviewState(pool, segId);
+  const isSkeletonAnswer = !state.lastWasFollowup;
+  const skeletonAnswers = isSkeletonAnswer ? [...state.skeletonAnswers, content] : state.skeletonAnswers;
+
+  let replyText: string | null = null;
+  const llm = await resolveLlm(pool, orgId, (globalThis as { fetch: typeof fetch }).fetch);
+
+  if (skeletonAnswers.length >= QUESTIONS.length && isSkeletonAnswer) {
+    // SYNTHESIS turn (R4): LLM-composed with marker + quote-the-user guard, else deterministic
+    if (llm) {
+      const red = await buildRedactor(pool, orgId);
+      const msgs: LlmMessage[] = [{
+        role: "user",
+        content: `Compose a short reflection from these answers, quoting the person's own words. Begin with the exact line "Here's your reflection". Answers:\n${skeletonAnswers.map((a) => `- ${red.redact(a)}`).join("\n")}`,
+      }];
+      const out = await llm.complete("You are a thoughtful growth companion.", msgs);
+      if (out) {
+        const restored = red.restore(out);
+        const quotes = skeletonAnswers.filter((a) => restored.includes(a)).length;
+        if (restored.startsWith("Here's your reflection") && quotes >= 2) replyText = restored;
+      }
+    }
+    replyText ??= deterministicSynthesis(skeletonAnswers);
+  } else if (isSkeletonAnswer && llm) {
+    // FOLLOW-UP turn (R3): exactly one LLM follow-up after a skeleton answer
+    const red = await buildRedactor(pool, orgId);
+    const out = await llm.complete(
+      "You are a thoughtful growth companion. Ask exactly one short follow-up question that deepens the person's last answer. No preamble.",
+      [{ role: "user", content: red.redact(content) }],
+    );
+    if (out) replyText = red.restore(out);
+    replyText ??= QUESTIONS[Math.min(skeletonAnswers.length, QUESTIONS.length - 1)]!; // R6 fail-closed
+  } else {
+    // after a follow-up answer (or no LLM): deterministic skeleton advance (R3/R7)
+    replyText = skeletonAnswers.length >= QUESTIONS.length
+      ? deterministicSynthesis(skeletonAnswers)
+      : QUESTIONS[skeletonAnswers.length]!;
+  }
   await pool.query(
     `INSERT INTO chat_messages(segment_id, role, content, seq)
      VALUES ($1,'user',$2,(SELECT coalesce(max(seq),0)+1 FROM chat_messages WHERE segment_id = $1))`,
@@ -129,19 +195,11 @@ export function registerCompanionRoutes(app: FastifyInstance, pool: Pool) {
     if (!(await memberRole(pool, orgId, user.id))) return reply.status(404).send({ error: "not_found" });
     const parsed = msgSchema.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_body" });
+    await companionTurn(pool, orgId, user.id, parsed.data.content);
     const segId = await ensureSegment(pool, orgId, user.id);
-    const answers = await answersSinceSynthesis(pool, segId);
-    const replyText = provider().reply(answers, parsed.data.content);
-    await pool.query(
-      `INSERT INTO chat_messages(segment_id, role, content, seq)
-       VALUES ($1,'user',$2,(SELECT coalesce(max(seq),0)+1 FROM chat_messages WHERE segment_id = $1))`,
-      [segId, parsed.data.content],
-    );
     const { rows } = await pool.query(
-      `INSERT INTO chat_messages(segment_id, role, content, seq)
-       VALUES ($1,'companion',$2,(SELECT coalesce(max(seq),0)+1 FROM chat_messages WHERE segment_id = $1))
-       RETURNING id, role, content, seq`,
-      [segId, replyText],
+      "SELECT id, role, content, seq FROM chat_messages WHERE segment_id = $1 AND role = 'companion' ORDER BY seq DESC LIMIT 1",
+      [segId],
     );
     return reply.status(201).send({ reply: rows[0] });
   });

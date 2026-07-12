@@ -54,5 +54,8 @@ Envelope encryption of BYO keys (named follow-up), streaming, per-user model cho
 ## 8. Decomposition sketch
 H01 migration + config endpoints; H02 clients + redaction; H03 hybrid engine in companionTurn; H04 green.
 
+## Amendments
+- A1 (via ISS-005): AC4's test inserts one advancing turn (answering the pending follow-up) before the fail-closed probe, so the probe lands on a skeleton answer as R3 requires. Assertions unchanged.
+
 ## 9. Integration test design
 itest/tests/spec-014.itest.ts pre-implementation. The test runs a scriptable OpenAI-compatible server (port 8190) capturing request bodies — redaction is asserted on real captured wire traffic. Org BYO config points at it. Expected red: 404 on llm-config, and guided (not scripted) replies in the flow assertions.
