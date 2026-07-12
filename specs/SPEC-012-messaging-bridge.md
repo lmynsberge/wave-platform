@@ -1,7 +1,7 @@
 ---
 id: SPEC-012
 title: Messaging bridge — Slack & Teams bots
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]

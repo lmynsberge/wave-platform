@@ -1,7 +1,7 @@
 ---
 id: SPEC-011
 title: Companion, nudges & asks UI (web)
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [web]

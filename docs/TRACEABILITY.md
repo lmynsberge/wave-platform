@@ -73,3 +73,9 @@ Red commit (5/5, two test-design fixes made PRE-lock and noted in review) → H0
 
 ### SPEC-010 — Thin org view (TDD)
 Red commit (4/4) → SPEC-010-H01 (R1–R5, closed schema) → artifacts. Locked file untouched red→green.
+
+### SPEC-011 — Companion UI (TDD, web-equivalence)
+Red commit (missing-module suite failures recorded) → H01+H02+H03 implementation commit → artifacts. One timing assertion fixed in unit suite (unlocked tier) post-red; noted.
+
+### SPEC-012 — Messaging bridge (TDD)
+Red commit (5/5) → H01+H02+H03 implementation commit (incl. companionTurn extraction) → AC6 Slack crypto unit suite → artifacts. Locked file untouched red→green.

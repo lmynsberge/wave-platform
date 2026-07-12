@@ -13,7 +13,13 @@ Ordering follows the v1 scope layers in PROJECT_BRIEF.md. Each item becomes one 
 9. **SPEC-009 — Nudges**: DONE, TDD — self-only gap feed, invariant-aware suggestions, behavioral fulfillment (reviews/SPEC-009-*)
 10. **SPEC-010 — Org view (thin)**: DONE, TDD — team-signal with closed-schema negative-space contract (reviews/SPEC-010-*)
 
-**V1 ROADMAP STRUCTURALLY COMPLETE.** Remaining for design-partner readiness: companion + flows UI, LLM provider, SSO, deployment. See open follow-ups in handoffs.
+**V1 ROADMAP STRUCTURALLY COMPLETE.**
+
+Post-v1 delivered:
+- **SPEC-011 — Companion, nudges & asks UI**: DONE, TDD (red component suites) — thread + two-step share, Give & Grow view
+- **SPEC-012 — Messaging bridge (Slack/Teams)**: DONE, TDD — binding-as-authorization gateway, one-companion-two-doors, Slack v0 HMAC + Teams shared-secret adapters
+
+Remaining for design-partner readiness: LLM companion provider, outbound nudge delivery via bridge, Teams AAD JWT, link-code UI in web settings, SSO, deployment.
 
 Cross-cutting: **SPEC-QA-001 — spec-locked integration harness**: DONE — itest/ with per-spec black-box files (16 tests, real stack), TDD-from-spec rule active from SPEC-007, lock rule enforced in review.
 
