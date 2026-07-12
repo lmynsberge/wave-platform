@@ -1,0 +1,22 @@
+flowchart LR
+    subgraph PRIVATE["Private: the individual only"]
+        SEG["chat segments\n(owner-only, 404 to all others)"]
+        GAPS["gap feed / nudges\n(no target userId exists)"]
+    end
+    subgraph CHAIN["Individual + upward chain"]
+        SHARES["reflection shares\n(copies at share time)"]
+        INBOX["feedback inbox\n(author-anonymous)"]
+    end
+    subgraph ORGV["Org-visible (gated)"]
+        SUMM["attribute summaries\nscore null below established"]
+        TEAM["team-signal\nclosed 5-key schema"]
+        DISPATCH["nudge-dispatch\n{notified} count only"]
+    end
+    subgraph OUTSIDE["Outside the boundary"]
+        LLMX["LLM providers\n(receive redacted text only:\n[Pn], [EMAIL])"]
+    end
+
+    SEG -- "explicit two-step share (copy)" --> SHARES
+    SEG -- "redact → complete → restore" --> LLMX
+    GAPS -. "never" .-> ORGV
+    SEG -. "never" .-> ORGV

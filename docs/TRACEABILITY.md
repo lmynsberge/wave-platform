@@ -85,3 +85,6 @@ Red commit (3/3, listener-capture) → H01+H02 implementation commit (R1-R5) →
 
 ### SPEC-014 — LLM companion provider (TDD)
 Red commit (5/5 after AC4 red-quality repair pre-lock) → H01+H02+H03 implementation commit (R1-R7) → ISS-005/A1 locked-test amendment (delta-reviewed) → artifacts. First exercise of the amendment path for a locked-test defect.
+
+### Retrospective (this pass)
+Docs refresh commit: PROJECT_BRIEF (status/learnings/revised questions), ARCHITECTURE (current modules/tables/boundaries + diagrams), WORKFLOW (locked-test defect path, durability protocol, listener pattern), BACKLOG.md (full harvest), diagrams/.

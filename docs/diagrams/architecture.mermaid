@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph Doors["Doors (all share one companion engine)"]
+        WEB["web (React)\nProfile · Companion · Give&Grow"]
+        SLACK["Slack bot"]
+        TEAMS["Teams bot"]
+    end
+
+    subgraph SERVER["server (Node/TS, fastify) — BFF, integrations, trust gates"]
+        AUTH["auth + sessions"]
+        ORGS["orgs · memberships · RBAC edge (404/403) · reporting chains"]
+        FEED["feedback proxy\n+ INVARIANT-1 manager gate"]
+        FLOWS["queues · inbox · assessments\n(pending_upward, upward decisions)"]
+        COMP["companion engine (hybrid)\nguided skeleton + LLM follow-ups"]
+        NUDGE["nudges · asks · requests"]
+        TEAMV["team-signal (closed schema)"]
+        INGEST["metric ingestion gateway"]
+        BRIDGE["bridge gateway\nbinding-as-authorization"]
+        OUT["outbound dispatch\ncount-only response"]
+        LLM["LLM layer\nredact → provider → restore\nfail-closed to guided"]
+    end
+
+    subgraph CORE["core (Rust, axum) — deterministic domain engine"]
+        EV["attributes · evidence · validations\nstructural rules"]
+        SIG["significance engine\ndiversity gates · drop-not-negative\nscore null below established"]
+        NORM["within-org normalization\nestablished-cohort percentiles"]
+    end
+
+    PG[("PostgreSQL\nserver schema | core schema")]
+    LLMP["LLM providers\nAnthropic / OpenAI-compatible / self-hosted\n(org BYO → platform default → none)"]
+
+    WEB --> SERVER
+    SLACK --> BRIDGE
+    TEAMS --> BRIDGE
+    OUT --> SLACK
+    OUT --> TEAMS
+    SERVER --> CORE
+    SERVER --> PG
+    CORE --> PG
+    LLM --> LLMP
+    COMP --> LLM

@@ -53,6 +53,15 @@ Any agent that hits a blocker, ambiguity, or spec conflict:
 
 Severity levels: `blocking` (work stopped), `degraded` (workaround exists, debt logged), `question` (clarification needed, work may continue on unaffected parts).
 
+## Locked-test defect path (proven in SPEC-014 / ISS-005)
+When implementation reveals a defect IN a locked itest (not in the code): STOP → file ISS-### stating why the code is spec-conformant and the test is not → spec amendment A# describing the minimal edit → Spec Reviewer delta-review → edit the locked file citing both IDs in the commit. Assertions may not be weakened; if a fix would weaken an assertion, that is a spec problem, not a test problem.
+
+## Environment durability protocol (ISS-003)
+Commit early; refresh the recovery bundle in persistent storage after EVERY commit (`git bundle create <outputs>/wave-platform.bundle --all`). On environment reset: clone from the bundle, reinstall only the toolchains the current spec needs, restart Postgres before test runs.
+
+## Harness listener pattern (SPEC-013/014)
+To black-box-test outbound integrations or third-party API calls: the locked itest runs its own HTTP listener; the harness exports the URL via env; assertions run on CAPTURED WIRE TRAFFIC. Prefer this over mocks whenever data crosses the trust boundary (it is how redaction is actually proven).
+
 ## Status vocabulary
 
 - Specs: `draft | in-review | approved | in-progress | done | superseded`

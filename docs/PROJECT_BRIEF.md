@@ -4,7 +4,17 @@ _Last updated: June 27, 2026_
 ---
 
 ## Status
-🟡 **Ideation** — Stream of consciousness, not yet focused
+🟢 **Built through v1 + 4 post-v1 specs** — 14 feature specs + 1 QA spec done, every trust invariant enforced in code and locked tests (49 integration / 18 server / 14 web tests green). Updated July 12, 2026.
+
+## What exists (one paragraph)
+Multi-tenant identity with reporting chains; an evidence/validation engine where managers validate but never rate (direct AND transitive, enforced + tested); significance gating with diversity thresholds and drop-not-negative manager semantics; a private hybrid AI companion (guided skeleton + LLM follow-ups, multi-provider incl. org-BYO and self-hosted, redaction-first) with an explicit two-step sharing boundary; nudges that route around signal-starving managers without ever showing the org who has gaps; hard-metric ingestion with within-org percentile normalization; a deliberately thin manager view with a closed schema; and Slack/Teams bots sharing the same companion. See docs/ROADMAP.md, docs/ARCHITECTURE.md, docs/BACKLOG.md.
+
+## What building it taught us (brief-level learnings)
+1. **The trust invariants are implementable as structure, not policy.** Validator-not-rater, absence-neutral, sharing-indistinguishability all became database constraints, closed schemas, and 404 semantics — and locked tests make regressions a build failure, not a judgment call.
+2. **"Negative space" contracts are the anti-surveillance tool.** Specifying what a response may NOT contain (team-signal's exact five keys, dispatch's count-only) turned out stronger than specifying what it must.
+3. **Absence-privacy goes further than the original brief said:** gaps aren't just neutral — they're the individual's private information. No org surface may enumerate who has them.
+4. **The upward chain generalizes.** Manager assessments entering as invisible pending_upward until the manager's manager validates turned invariant 1 from a prohibition into a workflow.
+5. **Redaction-first makes the LLM question tractable:** identifiers never leave the boundary, so provider flexibility (BYO, self-hosted) is a config choice rather than a privacy negotiation.
 
 ---
 
@@ -30,11 +40,13 @@ A two-sided platform: personal career growth tool for individuals + performance 
 
 ---
 
-## Open Questions
-- **Trust problem:** Individual must be vulnerable with the tool, but org may have visibility. Who owns the data — person or org? How is this resolved?
-- **The agnostic rating:** What form does it take — a score, a competency profile, a narrative? Who controls it?
-- What does v1 look like — which side do you build for first?
-- How does the tool know when to tell someone "this isn't the right fit"?
+## Open Questions (revised)
+- ~~Trust problem~~ → resolved in architecture (segmentation, sharing boundary, validator model) — remaining trust work is the arbitration process (still pinned) and bias instrumentation (BACKLOG "founding bets")
+- ~~v1 sequencing~~ → built individual-first; manager UI is now the biggest product gap
+- **The agnostic rating's public form**: scores exist per-attribute with normalization; the portable cross-org profile (form, governance, "drop worst of X" lifecycle) remains undesigned
+- **"Wrong fit" honesty**: the companion has the private context to say it, but when/how it should is an unopened product+ethics design
+- **Design-partner pursuit**: profile decided (150–1,000, growth culture, objective-metric industry); target list and pitch not started
+- **Premium boundary**: principle decided (outward-facing free); the concrete feature split is not
 
 ---
 
