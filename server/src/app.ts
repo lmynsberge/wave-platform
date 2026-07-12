@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { registerAuthRoutes } from "./auth.js";
 import { registerFeedbackRoutes } from "./feedback.js";
+import { registerCompanionRoutes } from "./companion.js";
 import { registerFlowRoutes } from "./flows.js";
 import type { Pool } from "./db.js";
 import { registerOrgRoutes } from "./orgs.js";
@@ -45,6 +46,7 @@ export function buildApp(opts: AppOptions) {
     registerOrgRoutes(app, opts.pool);
     registerFeedbackRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerFlowRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
+    registerCompanionRoutes(app, opts.pool);
   }
 
   return app;
