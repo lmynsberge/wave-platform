@@ -22,6 +22,7 @@
 7. Implementer takes ONE handoff, works on branch `spec-###/h##-<slug>`.
 8. Implementer updates the handoff file's `status` field: `in-progress` → `ready-for-review`.
 9. Definition of done for an implementer: acceptance criteria met, tests written and passing, lint clean, handoff status updated.
+10. COMMIT CONVENTION (traceability): one commit per handoff minimum, message `SPEC-###-H##: <summary> (R#, ...; AC#, ...)` naming the requirements/ACs satisfied. Spec/review docs commit separately as `SPEC-###: ...`; issue-driven changes as `ISS-###: ...`. Roll-ups recorded in docs/TRACEABILITY.md.
 
 ## 4. Review phase
 
