@@ -57,6 +57,7 @@ export async function setup() {
       CORE_URL: `http://127.0.0.1:${CORE_PORT}`,
       PORT: String(SERVER_PORT),
       BRIDGE_TEST_SECRET: "itest-bridge-secret",
+      BRIDGE_TEST_OUTBOUND_URL: "http://127.0.0.1:8189/out",
     },
     stdio: "ignore",
   });
