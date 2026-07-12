@@ -58,3 +58,6 @@ SPEC-###-H##: <summary> (R1, R3; AC2)
 
 ### SPEC-006 — Individual profile (per-handoff convention active)
 Commits self-describe; roll-up: spec+review commit, then SPEC-006-H01 (R7; AC6), SPEC-006-H02+H03 (R1–R5; AC1, AC2, AC4 — H02/H03 landed together after a container reset forced a node_modules reinstall mid-commit; split preserved in message), SPEC-006-H04 (R8; AC2–AC4).
+
+### SPEC-QA-001 — Spec-locked integration harness
+Per-handoff commits: process docs (R3, R4, R7; AC3), H01 harness (R1, R2; AC1), H02 backfill 001–003 (R5; AC2, AC5), H03+H04 backfill 004–006 + CI (R5, R6; AC2, AC4).

@@ -13,4 +13,6 @@ Ordering follows the v1 scope layers in PROJECT_BRIEF.md. Each item becomes one 
 9. **SPEC-009 — Nudges**: signal-gap detection → feedback requests
 10. **SPEC-010 — Org view (thin)**: team signal health, validation queue dashboard
 
+Cross-cutting: **SPEC-QA-001 — spec-locked integration harness**: DONE — itest/ with per-spec black-box files (16 tests, real stack), TDD-from-spec rule active from SPEC-007, lock rule enforced in review.
+
 Out of v1: cross-org normalization, arbitration, automated collusion detection, premium tier.

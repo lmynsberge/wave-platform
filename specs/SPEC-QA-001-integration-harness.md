@@ -1,7 +1,7 @@
 ---
 id: SPEC-QA-001
 title: Spec-locked integration test harness
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server, core, process]
