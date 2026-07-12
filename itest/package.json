@@ -1,0 +1,23 @@
+{
+  "name": "itest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "itest": "vitest run --no-file-parallelism",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}
