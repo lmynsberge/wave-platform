@@ -34,6 +34,8 @@ pub struct CreateEvidence {
     value_numeric: Option<f64>,
     note: Option<String>,
     state: Option<String>,
+    source: Option<String>,
+    period: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -135,11 +137,18 @@ async fn create_evidence(State(pool): State<Pool>, Json(body): Json<CreateEviden
     if !["active", "pending_upward"].contains(&state.as_str()) {
         return Err(err(StatusCode::BAD_REQUEST, "invalid_state"));
     }
+    if body.source.is_some() != body.period.is_some() {
+        return Err(err(StatusCode::BAD_REQUEST, "source_period_pair"));
+    }
+    // SPEC-008 R3: metric identity upsert — corrections update in place
     let row = client
         .query_one(
-            "INSERT INTO core.evidence(org_id, subject_user_id, author_user_id, attribute_id, kind, value_numeric, note, state)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
-            &[&body.org_id, &body.subject_user_id, &body.author_user_id, &attr_id, &kind, &body.value_numeric, &body.note, &state],
+            "INSERT INTO core.evidence(org_id, subject_user_id, author_user_id, attribute_id, kind, value_numeric, note, state, source, period)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+             ON CONFLICT (org_id, subject_user_id, attribute_id, source, period) WHERE source IS NOT NULL
+             DO UPDATE SET value_numeric = EXCLUDED.value_numeric
+             RETURNING id",
+            &[&body.org_id, &body.subject_user_id, &body.author_user_id, &attr_id, &kind, &body.value_numeric, &body.note, &state, &body.source, &body.period],
         )
         .await
         .map_err(internal)?;
@@ -449,6 +458,7 @@ async fn user_attribute_summary(
                 &kind, evidence_count, distinct_authors, distinct_validators, yes, counted_no, mean_value,
             );
             json!({
+                "normalizedScore": Value::Null,
                 "key": r.get::<_, String>(0), "name": r.get::<_, String>(1), "kind": kind,
                 "evidenceCount": evidence_count, "distinctAuthors": distinct_authors,
                 "validations": { "yes": yes, "no": no_all, "noSignal": no_signal },
@@ -457,5 +467,34 @@ async fn user_attribute_summary(
             })
         })
         .collect();
+
+    // SPEC-008 R4: within-org percentile among ESTABLISHED cohort (objective attrs; invariant 2/5)
+    let mut list = list;
+    for item in list.iter_mut() {
+        if item["kind"] != "objective" || item["status"] != "established" {
+            continue;
+        }
+        let key = item["key"].as_str().unwrap_or_default().to_string();
+        let cohort = client
+            .query(
+                "SELECT avg(e.value_numeric) AS mean, count(*) AS n
+                 FROM core.evidence e JOIN core.attributes a ON a.id = e.attribute_id
+                 WHERE e.org_id = $1 AND a.key = $2 AND e.state = 'active' AND e.kind = 'objective'
+                 GROUP BY e.subject_user_id",
+                &[&q.org_id, &key],
+            )
+            .await
+            .map_err(internal)?;
+        let established: Vec<f64> = cohort
+            .iter()
+            .filter(|r| r.get::<_, i64>(1) >= POLICY.obj_established_min)
+            .filter_map(|r| r.get::<_, Option<f64>>(0))
+            .collect();
+        if let Some(my_mean) = item["score"].as_f64() {
+            let below = established.iter().filter(|m| **m < my_mean).count() as f64;
+            let pct = (below / established.len().max(1) as f64 * 100.0).round();
+            item["normalizedScore"] = json!(pct);
+        }
+    }
     Ok((StatusCode::OK, Json(json!({ "attributes": list }))))
 }
