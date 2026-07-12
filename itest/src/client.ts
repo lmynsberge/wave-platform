@@ -13,7 +13,7 @@ export function client(base = SERVER()): Client {
     const res = await fetch(`${base}${path}`, {
       ...init,
       headers: {
-        "content-type": "application/json",
+        ...(init.body !== undefined ? { "content-type": "application/json" } : {}),
         ...(cookie ? { cookie } : {}),
         ...(init.headers ?? {}),
       },
