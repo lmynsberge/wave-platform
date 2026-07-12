@@ -203,3 +203,13 @@ describe("AC5: root author decided by admin", () => {
     expect(dec.statusCode).toBe(201);
   });
 });
+
+describe("AC6 (SPEC-006): signal-policy passthrough", () => {
+  it("returns core policy when authed; 401 otherwise", async () => {
+    const anon = await app.inject({ method: "GET", url: "/api/signal-policy" });
+    expect(anon.statusCode).toBe(401);
+    const ok = await app.inject({ method: "GET", url: "/api/signal-policy", headers: { cookie: ceo.cookie } });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().subjective.emerging.minEvidence).toBe(5);
+  });
+});

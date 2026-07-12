@@ -64,6 +64,15 @@ const assessmentSchema = z.object({
 const decisionSchema = z.object({ outcome: z.enum(["yes", "no", "no_signal"]) });
 
 export function registerFlowRoutes(app: FastifyInstance, pool: Pool, core: CoreClient) {
+  // SPEC-006 R7: platform policy passthrough (auth required, no org gate — transparency)
+  app.get("/api/signal-policy", async (req, reply) => {
+    const user = await currentUser(pool, req);
+    if (!user) return reply.status(401).send({ error: "unauthenticated" });
+    const res = await coreGet(core, "/v1/signal-policy");
+    if (!res) return reply.status(502).send({ error: "core_unreachable" });
+    return reply.status(res.status).send(res.json);
+  });
+
   // R1: manager validation queue
   app.get("/api/orgs/:orgId/validation-queue", async (req, reply) => {
     const { orgId } = req.params as { orgId: string };
