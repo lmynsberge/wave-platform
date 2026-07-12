@@ -82,3 +82,6 @@ Red commit (5/5) → H01+H02+H03 implementation commit (incl. companionTurn extr
 
 ### SPEC-013 — Outbound nudge delivery (TDD)
 Red commit (3/3, listener-capture) → H01+H02 implementation commit (R1-R5) → artifacts. Locked file untouched red→green.
+
+### SPEC-014 — LLM companion provider (TDD)
+Red commit (5/5 after AC4 red-quality repair pre-lock) → H01+H02+H03 implementation commit (R1-R7) → ISS-005/A1 locked-test amendment (delta-reviewed) → artifacts. First exercise of the amendment path for a locked-test defect.

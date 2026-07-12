@@ -21,7 +21,9 @@ Post-v1 delivered:
 
 - **SPEC-013 — Outbound nudge delivery**: DONE, TDD — proactive gap check-ins + asks reminders via bridge transports, 7-day dedup, count-only dispatch response
 
-Remaining for design-partner readiness: LLM companion provider (design discussion open), notification opt-out (REQUIRED pre-rollout), Teams AAD JWT, link-code UI in web settings, SSO, deployment, cron for dispatch.
+- **SPEC-014 — LLM companion provider**: DONE, TDD — hybrid guided-skeleton + LLM follow-ups, multi-provider (anthropic / openai_compatible incl. self-hosted) with org BYO, wire-level redaction, fail-closed everywhere
+
+Remaining for design-partner readiness: BYO-key envelope encryption (REQUIRED, SPEC-014 gate), notification opt-out (REQUIRED, SPEC-013 gate), staging verification of vendor adapters + Slack/Teams transports, Teams AAD JWT, link-code UI in web settings, SSO, deployment, cron for dispatch.
 
 Cross-cutting: **SPEC-QA-001 — spec-locked integration harness**: DONE — itest/ with per-spec black-box files (16 tests, real stack), TDD-from-spec rule active from SPEC-007, lock rule enforced in review.
 

@@ -1,7 +1,7 @@
 ---
 id: SPEC-014
 title: LLM companion provider — hybrid, multi-provider, redaction-first
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]
