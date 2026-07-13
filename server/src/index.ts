@@ -7,7 +7,8 @@ const port = Number(process.env.PORT ?? 8080);
 const app = buildApp({ coreUrl,
   webDist: process.env.WEB_DIST,
   secureCookies: process.env.COOKIE_SECURE === "1",
-  dispatchToken: process.env.NUDGE_DISPATCH_TOKEN, pool: createPool() });
+  dispatchToken: process.env.NUDGE_DISPATCH_TOKEN,
+  keyEncryptionKey: process.env.KEY_ENCRYPTION_KEY, pool: createPool() });
 app
   .listen({ port, host: "0.0.0.0" })
   .then(() => console.log(`wave-server listening on ${port}, core at ${coreUrl}`))

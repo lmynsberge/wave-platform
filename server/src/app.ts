@@ -26,6 +26,8 @@ export interface AppOptions {
   secureCookies?: boolean;
   /** SPEC-016 R7: system bearer token allowing Cloud Scheduler to trigger nudge-dispatch. */
   dispatchToken?: string;
+  /** SPEC-017 G1: base64 32-byte KEK for BYO-key encryption at rest. */
+  keyEncryptionKey?: string;
 }
 
 export function buildApp(opts: AppOptions) {
@@ -67,7 +69,7 @@ export function buildApp(opts: AppOptions) {
     registerTeamViewRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerBridgeRoutes(app, opts.pool, opts.coreUrl, fetchImpl);
     registerOutboundRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl }, fetchImpl, { dispatchToken: opts.dispatchToken });
-    registerLlmConfigRoutes(app, opts.pool);
+    registerLlmConfigRoutes(app, opts.pool, { keyEncryptionKey: opts.keyEncryptionKey });
   }
 
   if (opts.webDist && existsSync(opts.webDist)) {

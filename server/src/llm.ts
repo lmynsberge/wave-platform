@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { currentUser } from "./auth.js";
+import { decrypt, encrypt } from "./crypto.js";
 import type { Pool } from "./db.js";
 
 /**
@@ -74,6 +75,11 @@ export async function resolveLlm(pool: Pool, orgId: string, fetchImpl: typeof fe
     };
   }
   if (!cfg) return null;
+  if (cfg.apiKey) {
+    const plain = decrypt(cfg.apiKey, process.env.KEY_ENCRYPTION_KEY ?? "");
+    if (plain === null) return null; // tampered/undecryptable → guided fallback (SPEC-017 R2)
+    cfg = { ...cfg, apiKey: plain };
+  }
   return cfg.provider === "anthropic" ? anthropicClient(cfg, fetchImpl) : openAiCompatibleClient(cfg, fetchImpl);
 }
 
@@ -115,7 +121,7 @@ const putSchema = z.object({
 });
 const mask = (k?: string | null) => (k ? `…${k.slice(-4)}` : null);
 
-export function registerLlmConfigRoutes(app: FastifyInstance, pool: Pool) {
+export function registerLlmConfigRoutes(app: FastifyInstance, pool: Pool, cryptoOpts?: { keyEncryptionKey?: string }) {
   const gate = async (req: Parameters<typeof currentUser>[1], orgId: string) => {
     const user = await currentUser(pool, req);
     if (!user) return { status: 401 as const };
@@ -136,10 +142,13 @@ export function registerLlmConfigRoutes(app: FastifyInstance, pool: Pool) {
     const parsed = putSchema.safeParse(raw);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_body" });
     const { provider, baseUrl, model, apiKey } = parsed.data;
+    const kek = cryptoOpts?.keyEncryptionKey;
+    if (apiKey && !kek) return reply.status(400).send({ error: "encryption_unavailable" }); // SPEC-017 R2 fail-closed
+    const storedKey = apiKey && kek ? encrypt(apiKey, kek) : apiKey;
     await pool.query(
       `INSERT INTO org_llm_config(org_id, provider, base_url, model, api_key) VALUES ($1,$2,$3,$4,$5)
        ON CONFLICT (org_id) DO UPDATE SET provider = $2, base_url = $3, model = $4, api_key = $5, updated_at = now()`,
-      [orgId, provider, baseUrl ?? null, model, apiKey ?? null],
+      [orgId, provider, baseUrl ?? null, model, storedKey ?? null],
     );
     return reply.send({ provider, baseUrl: baseUrl ?? null, model, apiKey: mask(apiKey) });
   });

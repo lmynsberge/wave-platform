@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { currentUser } from "./auth.js";
 import type { Pool } from "./db.js";
 import { coreRequest, type CoreClient } from "./feedback.js";
@@ -60,6 +61,21 @@ const DEDUP_DAYS = 7;
 const GAP_TEXT = "You've got signal building — a quick `checkin` with your companion is a good way to keep it moving.";
 const ASKS_TEXT = "A colleague asked for your perspective. Send `asks` to see what's waiting.";
 
+export async function isOptedOut(pool: Pool, orgId: string, userId: string): Promise<boolean> {
+  const { rows } = await pool.query(
+    "SELECT opted_out FROM bridge_notification_prefs WHERE org_id = $1 AND user_id = $2", [orgId, userId],
+  );
+  return rows[0]?.opted_out === true;
+}
+
+export async function setOptedOut(pool: Pool, orgId: string, userId: string, optedOut: boolean): Promise<void> {
+  await pool.query(
+    `INSERT INTO bridge_notification_prefs(user_id, org_id, opted_out) VALUES ($1,$2,$3)
+     ON CONFLICT (user_id, org_id) DO UPDATE SET opted_out = $3`,
+    [userId, orgId, optedOut],
+  );
+}
+
 export function registerOutboundRoutes(app: FastifyInstance, pool: Pool, core: CoreClient, fetchImpl: typeof fetch, opts?: { dispatchToken?: string }) {
   const transports = new Map<string, OutboundTransport>();
   if (process.env.BRIDGE_TEST_OUTBOUND_URL) transports.set("test", testTransport(process.env.BRIDGE_TEST_OUTBOUND_URL, fetchImpl));
@@ -92,6 +108,7 @@ export function registerOutboundRoutes(app: FastifyInstance, pool: Pool, core: C
     for (const b of bindings as Array<{ platform: string; externalId: string; userId: string }>) {
       const transport = transports.get(b.platform);
       if (!transport) continue;
+      if (await isOptedOut(pool, orgId, b.userId)) continue; // SPEC-017 R5: nothing sent, logged, or counted
 
       const candidates: Array<{ kind: string; text: string }> = [];
 
@@ -137,5 +154,33 @@ export function registerOutboundRoutes(app: FastifyInstance, pool: Pool, core: C
       }
     }
     return reply.send({ notified });
+  });
+
+  // SPEC-017 R4: self-only preference — no target userId exists by construction
+  const prefsSchema = z.object({ optedOut: z.boolean() });
+  const gate = async (req: Parameters<typeof currentUser>[1], orgId: string) => {
+    const user = await currentUser(pool, req);
+    if (!user) return { code: 401 as const };
+    const { rows } = await pool.query("SELECT 1 FROM memberships WHERE org_id = $1 AND user_id = $2", [orgId, user.id]);
+    if (!rows[0]) return { code: 404 as const };
+    return { code: 200 as const, userId: user.id };
+  };
+
+  app.get("/api/orgs/:orgId/notification-prefs", async (req, reply) => {
+    const { orgId } = req.params as { orgId: string };
+    const g = await gate(req, orgId);
+    if (g.code !== 200) return reply.status(g.code).send({ error: g.code === 401 ? "unauthenticated" : "not_found" });
+    return reply.send({ optedOut: await isOptedOut(pool, orgId, g.userId!) });
+  });
+
+  app.put("/api/orgs/:orgId/notification-prefs", async (req, reply) => {
+    const { orgId } = req.params as { orgId: string };
+    const g = await gate(req, orgId);
+    if (g.code !== 200) return reply.status(g.code).send({ error: g.code === 401 ? "unauthenticated" : "not_found" });
+    const raw = typeof req.body === "string" ? JSON.parse(String(req.body)) : req.body;
+    const parsed = prefsSchema.safeParse(raw);
+    if (!parsed.success) return reply.status(400).send({ error: "invalid_body" });
+    await setOptedOut(pool, orgId, g.userId!, parsed.data.optedOut);
+    return reply.send({ optedOut: parsed.data.optedOut });
   });
 }

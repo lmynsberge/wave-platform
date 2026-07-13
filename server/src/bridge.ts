@@ -195,6 +195,17 @@ export function registerBridgeRoutes(app: FastifyInstance, pool: Pool, coreUrl: 
       return reply.send({ text: "Feedback delivered ✓ — thank you for adding your voice." });
     }
 
+    if (kw === "notifications") {
+      const arg = (rest[0] ?? "").toLowerCase();
+      if (arg !== "on" && arg !== "off")
+        return reply.send({ text: "Use `notifications off` to pause Wave's proactive messages here, or `notifications on` to resume." });
+      const { setOptedOut } = await import("./outbound.js");
+      await setOptedOut(pool, orgId, userId, arg === "off");
+      return reply.send({ text: arg === "off"
+        ? "Notifications off — Wave won't message you first. Everything else still works; `notifications on` any time."
+        : "Notifications on — Wave can nudge you again when there's something worth your attention." });
+    }
+
     if (kw === "nudges") {
       const summary = await core("GET", `/v1/users/${userId}/attributes?orgId=${orgId}`);
       const attrs = ((summary.json as { attributes?: Array<{ key: string; status: string; kind: string }> })?.attributes) ?? [];
