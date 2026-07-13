@@ -3,11 +3,15 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { execSync } from "node:child_process";
 import { buildApp } from "../src/app.js";
-import { newDb } from "./helpers.js";
+import { createPool } from "../src/db.js";
+import { migrate } from "../src/migrate.js";
 
+const DB_URL = "postgres://wave:wave@localhost:5432/wave_test_static";
 let webDist: string;
-beforeAll(() => {
+beforeAll(async () => {
+  execSync(`psql -h localhost -U wave -d postgres -c "DROP DATABASE IF EXISTS wave_test_static" -c "CREATE DATABASE wave_test_static"`, { env: { ...process.env, PGPASSWORD: "wave" }, stdio: "pipe" });
   webDist = mkdtempSync(join(tmpdir(), "wave-dist-"));
   writeFileSync(join(webDist, "index.html"), "<html><body>WAVE-SPA</body></html>");
   mkdirSync(join(webDist, "assets"));
@@ -35,7 +39,8 @@ describe("SPEC-016 AC1: static SPA serving", () => {
 
 describe("SPEC-016 AC2: Secure cookies behind the flag", () => {
   it("set-cookie carries Secure on signup and on logout-clear when enabled; absent when not", async () => {
-    const pool = await newDb();
+    const pool = createPool(DB_URL);
+    await migrate("migrations", pool);
     const secure = buildApp({ coreUrl: "http://core.invalid", pool, secureCookies: true });
     const su = await secure.inject({
       method: "POST", url: "/api/auth/signup",
@@ -55,5 +60,6 @@ describe("SPEC-016 AC2: Secure cookies behind the flag", () => {
     });
     expect(String(su2.headers["set-cookie"])).not.toContain("Secure");
     await plain.close();
+    await pool.end();
   });
 });
