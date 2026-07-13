@@ -8,6 +8,7 @@ import { registerFeedbackRoutes } from "./feedback.js";
 import { registerCompanionRoutes } from "./companion.js";
 import { registerFlowRoutes } from "./flows.js";
 import { registerIngestRoutes } from "./ingest.js";
+import { registerInvitationRoutes } from "./invitations.js";
 import { registerNudgeRoutes } from "./nudges.js";
 import { registerBridgeRoutes } from "./bridge.js";
 import { registerLlmConfigRoutes } from "./llm.js";
@@ -81,6 +82,7 @@ export function buildApp(opts: AppOptions) {
     registerBridgeRoutes(app, opts.pool, opts.coreUrl, fetchImpl);
     registerOutboundRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl }, fetchImpl, { dispatchToken: opts.dispatchToken });
     registerLlmConfigRoutes(app, opts.pool, { keyEncryptionKey: opts.keyEncryptionKey });
+    registerInvitationRoutes(app, opts.pool);
   }
 
   if (opts.webDist && existsSync(opts.webDist)) {
