@@ -6,6 +6,7 @@ import { GrowView } from "./GrowView";
 import { SettingsView } from "./SettingsView";
 import { TeamView } from "./TeamView";
 import { InboxPanel } from "./InboxPanel";
+import { InviteAccept } from "./InviteAccept";
 import { ProfileCards } from "./ProfileCards";
 
 function AuthScreen() {
@@ -46,10 +47,19 @@ function AuthScreen() {
 }
 
 export default function App() {
+  const invitePath = window.location.pathname.match(/^\/invite\/([a-f0-9]+)$/);
   const qc = useQueryClient();
   const me = useQuery({ queryKey: ["me"], queryFn: api.me, retry: false });
   const [orgId, setOrgId] = useState<string | null>(null);
   const [view, setView] = useState<"profile" | "companion" | "grow" | "team" | "settings">("profile");
+
+  if (invitePath) {
+    return (
+      <div className="auth-shell">
+        <InviteAccept token={invitePath[1]!} onJoined={() => { window.location.href = "/"; }} />
+      </div>
+    );
+  }
 
   if (me.isPending) return <p style={{ padding: 24 }}>Loading…</p>;
   if (me.isError || !me.data) return <AuthScreen />;

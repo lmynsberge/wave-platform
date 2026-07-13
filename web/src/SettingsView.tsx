@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 interface LlmConfig { provider: string; baseUrl: string | null; model: string; apiKey: string | null }
+interface Invitation { id: string; email: string; role: string; token: string; expiresAt: string }
 
 export function SettingsView({ orgId, role }: { orgId: string; role: string }) {
   const qc = useQueryClient();
@@ -46,6 +47,28 @@ export function SettingsView({ orgId, role }: { orgId: string; role: string }) {
     retry: false,
   });
   const [form, setForm] = useState({ provider: "openai_compatible", baseUrl: "", model: "", apiKey: "" });
+  const [inviteForm, setInviteForm] = useState({ email: "", role: "member" });
+  const [lastLink, setLastLink] = useState<string | null>(null);
+  const invites = useQuery({
+    queryKey: ["invites", orgId],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const res = await fetch(`/api/orgs/${orgId}/invitations`);
+      if (!res.ok) throw new Error("invites load failed");
+      return (await res.json()) as { invitations: Invitation[] };
+    },
+    retry: false,
+  });
+  const createInvite = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/orgs/${orgId}/invitations`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(inviteForm),
+      });
+      if (!res.ok) throw new Error("invite failed");
+      return (await res.json()) as { invitation: Invitation };
+    },
+    onSuccess: (d) => { setLastLink(`/invite/${d.invitation.token}`); setInviteForm({ email: "", role: "member" }); void qc.invalidateQueries({ queryKey: ["invites", orgId] }); },
+  });
   const saveLlm = useMutation({
     mutationFn: async () => {
       const body: Record<string, string> = { provider: form.provider, model: form.model };
@@ -89,6 +112,33 @@ export function SettingsView({ orgId, role }: { orgId: string; role: string }) {
           </label>
         )}
       </section>
+
+      {isAdmin && (
+        <section>
+          <h2>Invite teammates</h2>
+          <p className="hint">Invitations are email-bound — the link only works for the address you invite. No email is sent yet; copy the link and share it yourself.</p>
+          <div className="card">
+            <label>Invite email <input aria-label="Invite email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} /></label>
+            <label>Role{" "}
+              <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}>
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+            <button disabled={!inviteForm.email || createInvite.isPending} onClick={() => createInvite.mutate()}>Send invite</button>
+            {lastLink && <p>Share this link: <code>{lastLink}</code></p>}
+            {createInvite.isError && <div className="banner" role="alert">Invite failed — try again.</div>}
+          </div>
+          {invites.isSuccess && (invites.data.invitations ?? []).length > 0 && (
+            <div>
+              <h3>Pending</h3>
+              {invites.data.invitations.map((i) => (
+                <div className="card" key={i.id}>{i.email} · {i.role} · <code>/invite/{i.token}</code></div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {isAdmin && (
         <section>
