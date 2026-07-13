@@ -58,4 +58,8 @@ resource "google_secret_manager_secret_version" "db_password" {
 }
 
 output "connection_name" { value = google_sql_database_instance.pg.connection_name }
+output "app_password" {
+  value     = random_password.app.result
+  sensitive = true
+}
 output "db_password_secret" { value = google_secret_manager_secret.db_password.secret_id }

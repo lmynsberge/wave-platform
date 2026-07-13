@@ -77,3 +77,15 @@ jobs:
         working-directory: core
       - run: npm run itest
         working-directory: itest
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive
+        working-directory: infra
+      - run: terraform init -backend=false && terraform validate
+        working-directory: infra/envs/demo
+      - run: terraform init -backend=false && terraform validate
+        working-directory: infra/bootstrap
