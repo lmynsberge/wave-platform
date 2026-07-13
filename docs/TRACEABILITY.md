@@ -94,3 +94,6 @@ Red commit (missing module) → implementation commit (R1-R5) → artifacts.
 
 ### SPEC-016 — GCP deployment (TDD app-side; infra validate-delegated)
 Red commit (compile-fail contract) → H01/H01b app commits (G3 closed, dispatch bearer) → H02-H04 infra commit → HCL syntax fix commit (local tofu parse) → artifacts. Locked files untouched.
+
+### SPEC-017 — Security & consent gates (TDD, two tiers)
+Red commit (itest 3/4 right-reason; unit crypto missing-module; AC1 recorded as regression guard) → H01+H02 implementation commit → H03 TF/docs commit. Locked files untouched red→green.

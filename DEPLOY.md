@@ -53,4 +53,4 @@ Rule: vendor/human secrets NEVER go in tfvars or HCL (infra/README.md rule 4).
 Create a CI service account with Artifact Registry writer, set up Workload Identity Federation for the GitHub repo, and add `GCP_WIF_PROVIDER`, `GCP_CI_SA`, `GCP_PROJECT` repo secrets. Pushes to main then publish `:git-sha` images; deploys remain a deliberate `terraform apply` with the new tag.
 
 ## Costs & knobs
-Cloud Run: $0 idle (scale-to-zero, ~5–10s cold start — accepted). Cloud SQL db-f1-micro: ~$9–10/mo (the whole bill, basically). First design-partner upgrades: SQL tier + private IP, custom domain, unpause scheduler AFTER opt-out (gate G2).
+Cloud Run: $0 idle (scale-to-zero, ~5–10s cold start — accepted). Cloud SQL db-f1-micro: ~$9–10/mo (the whole bill, basically). First design-partner upgrades: SQL tier + private IP, custom domain, unpause scheduler when ready — gate G2 (opt-out) SHIPPED in SPEC-017; set the real org id first.

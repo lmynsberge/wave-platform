@@ -1,7 +1,7 @@
 ---
 id: SPEC-017
 title: Launch gates — BYO-key envelope encryption (G1) + notification opt-out (G2)
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server, infra]

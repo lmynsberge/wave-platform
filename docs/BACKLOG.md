@@ -4,8 +4,8 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 ## 🚧 Launch gates (REQUIRED before design-partner deployment)
 | # | Item | Origin |
 |---|---|---|
-| G1 | Envelope encryption for BYO LLM keys (plaintext-at-rest today) | SPEC-014 |
-| G2 | Per-user notification opt-out for outbound nudges | SPEC-013 review |
+| ~~G1~~ | ~~BYO key encryption~~ **CLOSED by SPEC-017** (AES-256-GCM, TF-generated KEK, fail-closed) | SPEC-017 |
+| ~~G2~~ | ~~Notification opt-out~~ **CLOSED by SPEC-017** (self-only prefs, bridge command, unsent/unlogged/uncounted skip) | SPEC-017 |
 | ~~G3~~ | ~~Session cookie Secure flag~~ **CLOSED by SPEC-016** (COOKIE_SECURE, TF-enforced) | SPEC-016 |
 | G4 | Verify Slack raw-body signature path under fastify raw-body handling (current fallback re-serializes req.body — fragile against canonicalization) | SPEC-012 |
 | ~~G5~~ | ~~Test adapter absent from prod~~ **CLOSED STRUCTURALLY by SPEC-016** (TF env allowlist) | SPEC-016 |
@@ -13,6 +13,7 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 | G7 | Rate limiting: auth endpoints, bridge events, dispatch trigger | never specced |
 
 ## 🔐 Security & trust (post-gate)
+- Re-encrypt sweep for any legacy plaintext BYO keys at first real org (SPEC-017 R3 debt); KMS-managed KEK as design-partner upgrade
 - Teams AAD JWT verification replacing shared-secret v1 (SPEC-012)
 - Redaction scope: phone numbers, org-specific terms, configurable dictionaries (SPEC-014)
 - Password reset flow; SSO/OIDC (brief Layer 1 — the actual design-partner requirement)

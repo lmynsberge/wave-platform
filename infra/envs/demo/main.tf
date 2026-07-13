@@ -60,6 +60,23 @@ resource "google_secret_manager_secret_version" "core_db_url" {
   secret      = google_secret_manager_secret.core_db_url.id
   secret_data = "postgres://wave:${module.db.app_password}@localhost/wave_core?host=/cloudsql/${module.db.connection_name}"
 }
+resource "random_password" "kek" {
+  length  = 32
+  special = false
+}
+resource "google_secret_manager_secret" "kek" {
+  project   = var.project_id
+  secret_id = "wave-${local.env}-key-encryption-key"
+  replication {
+    auto {}
+  }
+  labels = { app = "wave", managed-by = "terraform" }
+}
+resource "google_secret_manager_secret_version" "kek" {
+  secret      = google_secret_manager_secret.kek.id
+  secret_data = base64encode(random_password.kek.result)
+}
+
 resource "random_password" "dispatch_token" {
   length  = 40
   special = false
@@ -108,6 +125,7 @@ module "server" {
   secret_env = {
     DATABASE_URL         = google_secret_manager_secret.server_db_url.secret_id
     NUDGE_DISPATCH_TOKEN = google_secret_manager_secret.dispatch_token.secret_id
+    KEY_ENCRYPTION_KEY   = google_secret_manager_secret.kek.secret_id # SPEC-017 G1
     # Vendor secrets (values added out-of-band, see DEPLOY.md; adapters self-disable when absent):
     # SLACK_SIGNING_SECRET / SLACK_BOT_TOKEN / TEAMS_SHARED_SECRET / LLM_API_KEY
   }
