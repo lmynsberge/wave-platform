@@ -1,0 +1,59 @@
+// SPEC-016 H01 — WRITTEN PRE-IMPLEMENTATION (red at spec review).
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { buildApp } from "../src/app.js";
+import { newDb } from "./helpers.js";
+
+let webDist: string;
+beforeAll(() => {
+  webDist = mkdtempSync(join(tmpdir(), "wave-dist-"));
+  writeFileSync(join(webDist, "index.html"), "<html><body>WAVE-SPA</body></html>");
+  mkdirSync(join(webDist, "assets"));
+  writeFileSync(join(webDist, "assets", "app.js"), "console.log('wave')");
+});
+
+describe("SPEC-016 AC1: static SPA serving", () => {
+  it("serves index at /, SPA-falls-back on unknown routes, serves assets, keeps /api JSON 404", async () => {
+    const app = buildApp({ coreUrl: "http://core.invalid", webDist });
+    const root = await app.inject({ method: "GET", url: "/" });
+    expect(root.statusCode).toBe(200);
+    expect(root.body).toContain("WAVE-SPA");
+    const spa = await app.inject({ method: "GET", url: "/team/some/deep/route" });
+    expect(spa.statusCode).toBe(200);
+    expect(spa.body).toContain("WAVE-SPA");
+    const asset = await app.inject({ method: "GET", url: "/assets/app.js" });
+    expect(asset.statusCode).toBe(200);
+    expect(asset.body).toContain("wave");
+    const api = await app.inject({ method: "GET", url: "/api/does-not-exist" });
+    expect(api.statusCode).toBe(404);
+    expect(api.headers["content-type"]).toContain("application/json");
+    await app.close();
+  });
+});
+
+describe("SPEC-016 AC2: Secure cookies behind the flag", () => {
+  it("set-cookie carries Secure on signup and on logout-clear when enabled; absent when not", async () => {
+    const pool = await newDb();
+    const secure = buildApp({ coreUrl: "http://core.invalid", pool, secureCookies: true });
+    const su = await secure.inject({
+      method: "POST", url: "/api/auth/signup",
+      payload: { email: "sec@it.test", password: "password123", name: "Sec" },
+    });
+    expect(su.statusCode).toBe(201);
+    expect(String(su.headers["set-cookie"])).toContain("Secure");
+    const cookie = String(su.headers["set-cookie"]).split(";")[0]!;
+    const lo = await secure.inject({ method: "POST", url: "/api/auth/logout", headers: { cookie } });
+    expect(String(lo.headers["set-cookie"])).toContain("Secure");
+    await secure.close();
+
+    const plain = buildApp({ coreUrl: "http://core.invalid", pool });
+    const su2 = await plain.inject({
+      method: "POST", url: "/api/auth/signup",
+      payload: { email: "plain@it.test", password: "password123", name: "Plain" },
+    });
+    expect(String(su2.headers["set-cookie"])).not.toContain("Secure");
+    await plain.close();
+  });
+});
