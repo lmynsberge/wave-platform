@@ -39,7 +39,9 @@ module "db" {
 resource "google_secret_manager_secret" "server_db_url" {
   project   = var.project_id
   secret_id = "wave-${local.env}-server-database-url"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
   labels = { app = "wave", managed-by = "terraform" }
 }
 resource "google_secret_manager_secret_version" "server_db_url" {
@@ -49,7 +51,9 @@ resource "google_secret_manager_secret_version" "server_db_url" {
 resource "google_secret_manager_secret" "core_db_url" {
   project   = var.project_id
   secret_id = "wave-${local.env}-core-database-url"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
   labels = { app = "wave", managed-by = "terraform" }
 }
 resource "google_secret_manager_secret_version" "core_db_url" {
@@ -63,7 +67,9 @@ resource "random_password" "dispatch_token" {
 resource "google_secret_manager_secret" "dispatch_token" {
   project   = var.project_id
   secret_id = "wave-${local.env}-dispatch-token"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
   labels = { app = "wave", managed-by = "terraform" }
 }
 resource "google_secret_manager_secret_version" "dispatch_token" {
@@ -141,11 +147,11 @@ resource "google_cloud_run_v2_job" "migrate" {
 }
 
 resource "google_cloud_scheduler_job" "nudge_dispatch" {
-  name      = "wave-${local.env}-nudge-dispatch"
-  project   = var.project_id
-  region    = var.region
-  schedule  = "0 14 * * 1" # Mondays 14:00 UTC
-  paused    = true         # unpause after an org exists and opt-out (gate G2) ships
+  name     = "wave-${local.env}-nudge-dispatch"
+  project  = var.project_id
+  region   = var.region
+  schedule = "0 14 * * 1" # Mondays 14:00 UTC
+  paused   = true         # unpause after an org exists and opt-out (gate G2) ships
   http_target {
     http_method = "POST"
     uri         = "${module.server.uri}/api/orgs/REPLACE_WITH_ORG_ID/nudge-dispatch"

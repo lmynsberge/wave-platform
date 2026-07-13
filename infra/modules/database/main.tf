@@ -49,7 +49,9 @@ resource "google_sql_user" "app" {
 resource "google_secret_manager_secret" "db_password" {
   project   = var.project_id
   secret_id = "${var.name}-db-password"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
   labels = { app = "wave", managed-by = "terraform" }
 }
 resource "google_secret_manager_secret_version" "db_password" {
