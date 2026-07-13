@@ -1,7 +1,7 @@
 ---
 id: SPEC-020
 title: Invitations & org join
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server, web]

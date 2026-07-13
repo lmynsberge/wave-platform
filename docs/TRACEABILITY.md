@@ -100,3 +100,9 @@ Red commit (itest 3/4 right-reason; unit crypto missing-module; AC1 recorded as 
 
 ### SPEC-018 — Slack raw-body (G4, TDD unit-tier)
 Red commit (byte-exact rejected + fail-open confirmed) → H01 implementation commit → artifacts.
+
+### SPEC-019 — Settings UI (TDD, web)
+Red commit (missing module) → H01+H02 commit → artifacts.
+
+### SPEC-020 — Invitations (TDD)
+Red commit (3/3) → H01 server commit → H02 web commit (suite caught a real 404-as-success crash) → artifacts. Locked file untouched red→green.
