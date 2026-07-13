@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "./api";
 import { CompanionView } from "./CompanionView";
 import { GrowView } from "./GrowView";
+import { TeamView } from "./TeamView";
 import { InboxPanel } from "./InboxPanel";
 import { ProfileCards } from "./ProfileCards";
 
@@ -47,7 +48,7 @@ export default function App() {
   const qc = useQueryClient();
   const me = useQuery({ queryKey: ["me"], queryFn: api.me, retry: false });
   const [orgId, setOrgId] = useState<string | null>(null);
-  const [view, setView] = useState<"profile" | "companion" | "grow">("profile");
+  const [view, setView] = useState<"profile" | "companion" | "grow" | "team">("profile");
 
   if (me.isPending) return <p style={{ padding: 24 }}>Loading…</p>;
   if (me.isError || !me.data) return <AuthScreen />;
@@ -72,6 +73,7 @@ export default function App() {
           <button className={view === "profile" ? "" : "ghost"} onClick={() => setView("profile")}>Profile</button>
           <button className={view === "companion" ? "" : "ghost"} onClick={() => setView("companion")}>Companion</button>
           <button className={view === "grow" ? "" : "ghost"} onClick={() => setView("grow")}>Give & Grow</button>
+          <button className={view === "team" ? "" : "ghost"} onClick={() => setView("team")}>Team</button>
         </div>
         <button
           className="ghost"
@@ -84,6 +86,7 @@ export default function App() {
         {view === "profile" && (<><h2>Your signal</h2>{activeOrg ? <ProfileCards orgId={activeOrg} userId={me.data.user.id} /> : null}</>)}
         {view === "companion" && activeOrg ? <CompanionView orgId={activeOrg} /> : null}
         {view === "grow" && activeOrg ? <GrowView orgId={activeOrg} /> : null}
+        {view === "team" && activeOrg ? <TeamView orgId={activeOrg} /> : null}
       </main>
       <aside className="inbox">
         {activeOrg ? <InboxPanel orgId={activeOrg} /> : null}

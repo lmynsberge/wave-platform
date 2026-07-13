@@ -66,3 +66,6 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .grow section + section { margin-top: 22px; }
 .grow textarea { width: 100%; min-height: 64px; border: 1px solid var(--line); border-radius: 8px; font: inherit; padding: 8px 10px; margin: 8px 0; }
 .suggested { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.teamview section + section { margin-top: 22px; }
+.teamview .card p { margin: 8px 0; }
