@@ -161,6 +161,8 @@ export function registerLlmConfigRoutes(app: FastifyInstance, pool: Pool, crypto
       "SELECT provider, base_url AS \"baseUrl\", model, api_key AS \"apiKey\" FROM org_llm_config WHERE org_id = $1", [orgId],
     );
     if (!rows[0]) return reply.status(404).send({ error: "no_config" });
-    return reply.send({ ...rows[0], apiKey: mask(rows[0].apiKey) });
+    // SPEC-014 contract: mask shows the KEY's last 4 — decrypt before masking (SPEC-017)
+    const plain = rows[0].apiKey ? decrypt(rows[0].apiKey, cryptoOpts?.keyEncryptionKey ?? "") : null;
+    return reply.send({ ...rows[0], apiKey: mask(plain) });
   });
 }
