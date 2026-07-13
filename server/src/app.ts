@@ -32,6 +32,17 @@ export interface AppOptions {
 
 export function buildApp(opts: AppOptions) {
   const app = Fastify({ logger: false });
+
+  // SPEC-018 (G4): capture exact raw bytes for signature verification; parsing unchanged
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
+    (req as unknown as { rawBody: string }).rawBody = body as string;
+    if ((body as string).length === 0) return done(new Error("empty body")); // preserve 400 behavior
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err) {
+      done(err as Error);
+    }
+  });
   const fetchImpl = opts.fetchImpl ?? fetch;
 
   if (process.env.NODE_ENV === "development") {

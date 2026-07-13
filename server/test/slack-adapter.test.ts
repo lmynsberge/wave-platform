@@ -37,12 +37,18 @@ describe("SPEC-012 AC6: Slack v0 signatures", () => {
 });
 
 // SPEC-018 (G4) — WRITTEN PRE-IMPLEMENTATION: byte-exact verification through the real app.
+import { execSync } from "node:child_process";
 import { buildApp } from "../src/app.js";
+import { createPool } from "../src/db.js";
+import { migrate } from "../src/migrate.js";
 
 describe("SPEC-018 AC1+AC3: verification over true raw bytes", () => {
   it("non-canonical raw JSON signed over exact bytes verifies end-to-end", async () => {
+    execSync(`psql -h localhost -U wave -d postgres -c "DROP DATABASE IF EXISTS wave_test_slack" -c "CREATE DATABASE wave_test_slack"`, { env: { ...process.env, PGPASSWORD: "wave" }, stdio: "pipe" });
+    const pool = createPool("postgres://wave:wave@localhost:5432/wave_test_slack");
+    await migrate("migrations", pool);
     process.env.SLACK_SIGNING_SECRET = SECRET;
-    const app = buildApp({ coreUrl: "http://core.invalid" });
+    const app = buildApp({ coreUrl: "http://core.invalid", pool });
     // spacing + key order JSON.stringify would never reproduce
     const raw = `{  "event" : {"text":"asks","user":"U-raw"} ,"weird_order": true }`;
     const ts = Math.floor(Date.now() / 1000);
@@ -55,6 +61,7 @@ describe("SPEC-018 AC1+AC3: verification over true raw bytes", () => {
     expect(res.statusCode).toBe(200); // verified → linking guidance for the unlinked user
     expect((res.json() as { text: string }).text.toLowerCase()).toContain("link");
     await app.close();
+    await pool.end();
     delete process.env.SLACK_SIGNING_SECRET;
   });
 

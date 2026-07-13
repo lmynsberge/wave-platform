@@ -25,7 +25,8 @@ export function slackAdapter(signingSecret: string, now: () => number = Date.now
       const sig = req.headers["x-slack-signature"] as string | undefined;
       if (!ts || !sig) return null;
       if (Math.abs(now() / 1000 - Number(ts)) > 300) return null; // replay window
-      const raw = (req as unknown as { rawBody?: string }).rawBody ?? JSON.stringify(req.body);
+      const raw = (req as unknown as { rawBody?: string }).rawBody;
+      if (!raw) return null; // SPEC-018 R2: never verify reconstructed bytes — fail closed
       const expected = "v0=" + createHmac("sha256", signingSecret).update(`v0:${ts}:${raw}`).digest("hex");
       const a = Buffer.from(expected);
       const b = Buffer.from(sig);
