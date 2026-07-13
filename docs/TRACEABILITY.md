@@ -88,3 +88,6 @@ Red commit (5/5 after AC4 red-quality repair pre-lock) → H01+H02+H03 implement
 
 ### Retrospective (this pass)
 Docs refresh commit: PROJECT_BRIEF (status/learnings/revised questions), ARCHITECTURE (current modules/tables/boundaries + diagrams), WORKFLOW (locked-test defect path, durability protocol, listener pattern), BACKLOG.md (full harvest), diagrams/.
+
+### SPEC-015 — Manager UI (TDD, web)
+Red commit (missing module) → implementation commit (R1-R5) → artifacts.

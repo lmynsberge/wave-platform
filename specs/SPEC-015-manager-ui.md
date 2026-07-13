@@ -1,7 +1,7 @@
 ---
 id: SPEC-015
 title: Manager UI — team signal, validation queue, upward decisions
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [web]
