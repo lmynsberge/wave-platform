@@ -35,3 +35,31 @@ describe("SPEC-012 AC6: Slack v0 signatures", () => {
     expect(adapter.verifyAndNormalize({ headers: {}, body: event } as never)).toBeNull();
   });
 });
+
+// SPEC-018 (G4) — WRITTEN PRE-IMPLEMENTATION: byte-exact verification through the real app.
+import { buildApp } from "../src/app.js";
+
+describe("SPEC-018 AC1+AC3: verification over true raw bytes", () => {
+  it("non-canonical raw JSON signed over exact bytes verifies end-to-end", async () => {
+    process.env.SLACK_SIGNING_SECRET = SECRET;
+    const app = buildApp({ coreUrl: "http://core.invalid" });
+    // spacing + key order JSON.stringify would never reproduce
+    const raw = `{  "event" : {"text":"asks","user":"U-raw"} ,"weird_order": true }`;
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = "v0=" + createHmac("sha256", SECRET).update(`v0:${ts}:${raw}`).digest("hex");
+    const res = await app.inject({
+      method: "POST", url: "/api/bridge/slack/events",
+      headers: { "content-type": "application/json", "x-slack-request-timestamp": String(ts), "x-slack-signature": sig },
+      payload: raw,
+    });
+    expect(res.statusCode).toBe(200); // verified → linking guidance for the unlinked user
+    expect((res.json() as { text: string }).text.toLowerCase()).toContain("link");
+    await app.close();
+    delete process.env.SLACK_SIGNING_SECRET;
+  });
+
+  it("adapter with no rawBody fails closed (fallback removed)", () => {
+    const req = { headers: signed(event, NOW / 1000).headers, body: event } as never; // rawBody absent
+    expect(adapter.verifyAndNormalize(req)).toBeNull();
+  });
+});
