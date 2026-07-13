@@ -97,3 +97,6 @@ Red commit (compile-fail contract) → H01/H01b app commits (G3 closed, dispatch
 
 ### SPEC-017 — Security & consent gates (TDD, two tiers)
 Red commit (itest 3/4 right-reason; unit crypto missing-module; AC1 recorded as regression guard) → H01+H02 implementation commit → H03 TF/docs commit. Locked files untouched red→green.
+
+### SPEC-018 — Slack raw-body (G4, TDD unit-tier)
+Red commit (byte-exact rejected + fail-open confirmed) → H01 implementation commit → artifacts.

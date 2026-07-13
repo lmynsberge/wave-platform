@@ -1,7 +1,7 @@
 ---
 id: SPEC-018
 title: Gate G4 — Slack signature verification over the true raw body
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]

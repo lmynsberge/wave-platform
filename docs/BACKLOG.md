@@ -7,10 +7,10 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 | ~~G1~~ | ~~BYO key encryption~~ **CLOSED by SPEC-017** (AES-256-GCM, TF-generated KEK, fail-closed) | SPEC-017 |
 | ~~G2~~ | ~~Notification opt-out~~ **CLOSED by SPEC-017** (self-only prefs, bridge command, unsent/unlogged/uncounted skip) | SPEC-017 |
 | ~~G3~~ | ~~Session cookie Secure flag~~ **CLOSED by SPEC-016** (COOKIE_SECURE, TF-enforced) | SPEC-016 |
-| G4 | Verify Slack raw-body signature path under fastify raw-body handling (current fallback re-serializes req.body — fragile against canonicalization) | SPEC-012 |
+| ~~G4~~ | ~~Slack raw-body signatures~~ **CLOSED by SPEC-018** (exact-bytes-only verification, fail-open fallback removed) | SPEC-018 |
 | ~~G5~~ | ~~Test adapter absent from prod~~ **CLOSED STRUCTURALLY by SPEC-016** (TF env allowlist) | SPEC-016 |
-| G6 | Staging verification: Anthropic + OpenAI + one self-hosted model; Slack chat.postMessage; Teams webhook | SPEC-012/013/014 |
-| G7 | Rate limiting: auth endpoints, bridge events, dispatch trigger | never specced |
+| G6 | Staging verification — DECIDED POSTURE (~$0): the demo deployment IS staging; Slack via free workspace; openai_compatible via local Ollama; Anthropic pennies with any key; **Teams DEFERRED until a partner demands it** | SPEC-012/013/014 |
+| G7 | Rate limiting: auth, bridge events, dispatch — **DEFERRED by decision** (revisit before public exposure beyond demo) | decision |
 
 ## 🔐 Security & trust (post-gate)
 - Re-encrypt sweep for any legacy plaintext BYO keys at first real org (SPEC-017 R3 debt); KMS-managed KEK as design-partner upgrade

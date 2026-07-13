@@ -29,6 +29,8 @@ Post-v1 delivered:
 
 - **SPEC-017 — Security & consent gates**: DONE, TDD both tiers — G1 (AES-256-GCM at rest, fail-closed) + G2 (opt-out: API, in-channel command, invariant-safe dispatch skip)
 
+- **SPEC-018 — Slack raw-body hardening (G4)**: DONE, TDD — exact-bytes verification, fail-open fallback removed
+
 Remaining for design-partner readiness: BYO-key envelope encryption (REQUIRED, SPEC-014 gate), notification opt-out (REQUIRED, SPEC-013 gate), staging verification of vendor adapters + Slack/Teams transports, Teams AAD JWT, link-code UI in web settings, SSO, deployment, cron for dispatch.
 
 Cross-cutting: **SPEC-QA-001 — spec-locked integration harness**: DONE — itest/ with per-spec black-box files (16 tests, real stack), TDD-from-spec rule active from SPEC-007, lock rule enforced in review.
