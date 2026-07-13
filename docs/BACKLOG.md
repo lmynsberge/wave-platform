@@ -6,9 +6,9 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 |---|---|---|
 | G1 | Envelope encryption for BYO LLM keys (plaintext-at-rest today) | SPEC-014 |
 | G2 | Per-user notification opt-out for outbound nudges | SPEC-013 review |
-| G3 | Session cookie `Secure` flag behind env; HTTPS everywhere | SPEC-002 |
+| ~~G3~~ | ~~Session cookie Secure flag~~ **CLOSED by SPEC-016** (COOKIE_SECURE, TF-enforced) | SPEC-016 |
 | G4 | Verify Slack raw-body signature path under fastify raw-body handling (current fallback re-serializes req.body — fragile against canonicalization) | SPEC-012 |
-| G5 | Ensure BRIDGE_TEST_SECRET / test adapter absent from production config (deployment checklist) | SPEC-012 review |
+| ~~G5~~ | ~~Test adapter absent from prod~~ **CLOSED STRUCTURALLY by SPEC-016** (TF env allowlist) | SPEC-016 |
 | G6 | Staging verification: Anthropic + OpenAI + one self-hosted model; Slack chat.postMessage; Teams webhook | SPEC-012/013/014 |
 | G7 | Rate limiting: auth endpoints, bridge events, dispatch trigger | never specced |
 

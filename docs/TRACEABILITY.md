@@ -91,3 +91,6 @@ Docs refresh commit: PROJECT_BRIEF (status/learnings/revised questions), ARCHITE
 
 ### SPEC-015 — Manager UI (TDD, web)
 Red commit (missing module) → implementation commit (R1-R5) → artifacts.
+
+### SPEC-016 — GCP deployment (TDD app-side; infra validate-delegated)
+Red commit (compile-fail contract) → H01/H01b app commits (G3 closed, dispatch bearer) → H02-H04 infra commit → HCL syntax fix commit (local tofu parse) → artifacts. Locked files untouched.

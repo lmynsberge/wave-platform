@@ -1,7 +1,7 @@
 ---
 id: SPEC-016
 title: GCP demo deployment — Cloud Run + Cloud SQL, Terraform
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server, infra]
