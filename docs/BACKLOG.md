@@ -42,6 +42,9 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 **Feedback engine:** multi-validator upward consensus (single-decider today) · per-org/env-configurable significance thresholds · shares-as-evidence (MUST route through SPEC-003 rules — SPEC-007 review finding 5)
 **Ingestion:** CSV upload UI · named source adapters (Culture Amp first, per wave-preview) · scheduled connector pulls · cron wrapper for nudge-dispatch · digest batching for notifications
 
+## 📦 Shelved (deliberately, with wake conditions)
+- **Design-partner target list** (Decision #2 profile: 150–1,000 employees, growth culture, objective-metric industry). WAKE CONDITION: working demo deployment exists. Do not start outreach research before then.
+
 ## 🔭 Founding-brief bets not yet started (the moat work)
 - **Cross-org normalization** — the core product bet; unblocs when org #2 exists
 - **Cohort segmentation** (role/seniority/industry) for fair within- and cross-org comparison
