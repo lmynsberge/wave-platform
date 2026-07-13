@@ -69,3 +69,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 
 .teamview section + section { margin-top: 22px; }
 .teamview .card p { margin: 8px 0; }
+
+.settings section + section { margin-top: 26px; }
+.settings label { display: block; margin: 8px 0; }
+.settings code { font-size: 1.1em; background: var(--tide-soft); padding: 4px 10px; border-radius: 6px; display: inline-block; }
