@@ -1,7 +1,7 @@
 ---
 id: SPEC-019
 title: Settings UI — linking, notifications, LLM config
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [web]
