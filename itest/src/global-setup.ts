@@ -58,6 +58,7 @@ export async function setup() {
       PORT: String(SERVER_PORT),
       BRIDGE_TEST_SECRET: "itest-bridge-secret",
       BRIDGE_TEST_OUTBOUND_URL: "http://127.0.0.1:8189/out",
+      KEY_ENCRYPTION_KEY: Buffer.from("itest-kek-32-bytes-padded-000000").toString("base64"),
     },
     stdio: "ignore",
   });
