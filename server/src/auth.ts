@@ -13,14 +13,20 @@ export function hashPassword(password: string, salt: string): string {
 }
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 
+let SECURE_COOKIES = false;
+export function configureAuthCookies(opts: { secureCookies: boolean }) {
+  SECURE_COOKIES = opts.secureCookies;
+}
+const secureSuffix = () => (SECURE_COOKIES ? "; Secure" : "");
+
 function setSessionCookie(reply: FastifyReply, token: string, expires: Date) {
   reply.header(
     "set-cookie",
-    `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; SameSite=Lax; Expires=${expires.toUTCString()}`,
+    `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; SameSite=Lax; Expires=${expires.toUTCString()}${secureSuffix()}`,
   );
 }
 function clearSessionCookie(reply: FastifyReply) {
-  reply.header("set-cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`);
+  reply.header("set-cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secureSuffix()}`);
 }
 function readToken(req: FastifyRequest): string | null {
   const cookie = req.headers.cookie;
@@ -66,7 +72,8 @@ export function requireAuth(pool: Pool) {
 const signupSchema = z.object({ email: z.string().email(), password: z.string().min(8), name: z.string().min(1) });
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
 
-export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
+export function registerAuthRoutes(app: FastifyInstance, pool: Pool, opts?: { secureCookies: boolean }) {
+  if (opts) configureAuthCookies(opts);
   app.post("/api/auth/signup", async (req, reply) => {
     const parsed = signupSchema.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_body" });

@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { registerAuthRoutes } from "./auth.js";
@@ -17,6 +20,10 @@ export interface AppOptions {
   coreUrl: string;
   fetchImpl?: typeof fetch;
   pool?: Pool;
+  /** SPEC-016 R1: serve the built web app from this directory (SPA fallback for non-/api GETs). */
+  webDist?: string;
+  /** SPEC-016 R2 (gate G3): mark session cookies Secure. */
+  secureCookies?: boolean;
 }
 
 export function buildApp(opts: AppOptions) {
@@ -48,7 +55,7 @@ export function buildApp(opts: AppOptions) {
   });
 
   if (opts.pool) {
-    registerAuthRoutes(app, opts.pool);
+    registerAuthRoutes(app, opts.pool, { secureCookies: opts.secureCookies ?? false });
     registerOrgRoutes(app, opts.pool);
     registerFeedbackRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerFlowRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
@@ -59,6 +66,17 @@ export function buildApp(opts: AppOptions) {
     registerBridgeRoutes(app, opts.pool, opts.coreUrl, fetchImpl);
     registerOutboundRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl }, fetchImpl);
     registerLlmConfigRoutes(app, opts.pool);
+  }
+
+  if (opts.webDist && existsSync(opts.webDist)) {
+    void app.register(fastifyStatic, { root: opts.webDist, wildcard: false });
+    // SPA fallback — never shadows /api JSON 404s (SPEC-016 §5)
+    app.setNotFoundHandler((req, reply) => {
+      if (req.method === "GET" && !req.url.startsWith("/api")) {
+        return reply.type("text/html").send(readFileSync(join(opts.webDist!, "index.html"), "utf8"));
+      }
+      return reply.status(404).send({ error: "not_found" });
+    });
   }
 
   return app;
