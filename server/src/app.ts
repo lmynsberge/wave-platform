@@ -24,6 +24,8 @@ export interface AppOptions {
   webDist?: string;
   /** SPEC-016 R2 (gate G3): mark session cookies Secure. */
   secureCookies?: boolean;
+  /** SPEC-016 R7: system bearer token allowing Cloud Scheduler to trigger nudge-dispatch. */
+  dispatchToken?: string;
 }
 
 export function buildApp(opts: AppOptions) {
@@ -64,7 +66,7 @@ export function buildApp(opts: AppOptions) {
     registerNudgeRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerTeamViewRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerBridgeRoutes(app, opts.pool, opts.coreUrl, fetchImpl);
-    registerOutboundRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl }, fetchImpl);
+    registerOutboundRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl }, fetchImpl, { dispatchToken: opts.dispatchToken });
     registerLlmConfigRoutes(app, opts.pool);
   }
 

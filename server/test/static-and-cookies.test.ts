@@ -63,3 +63,23 @@ describe("SPEC-016 AC2: Secure cookies behind the flag", () => {
     await pool.end();
   });
 });
+
+describe("SPEC-016 AC2b: system bearer for nudge-dispatch (Cloud Scheduler path)", () => {
+  it("valid bearer dispatches without a session; wrong bearer 401", async () => {
+    const pool = createPool(DB_URL);
+    const app = buildApp({ coreUrl: "http://core.invalid", pool, dispatchToken: "sched-token-1" });
+    // create an org so the route has something to scan; use the session path for setup
+    const su = await app.inject({ method: "POST", url: "/api/auth/signup", payload: { email: "d16@it.test", password: "password123", name: "D" } });
+    const cookie = String(su.headers["set-cookie"]).split(";")[0]!;
+    const org = await app.inject({ method: "POST", url: "/api/orgs", headers: { cookie }, payload: { name: "D16", slug: "d16" } });
+    const orgId = (org.json() as { org: { id: string } }).org.id;
+
+    const ok = await app.inject({ method: "POST", url: `/api/orgs/${orgId}/nudge-dispatch`, headers: { authorization: "Bearer sched-token-1" } });
+    expect(ok.statusCode).toBe(200);
+    expect(Object.keys(ok.json() as object)).toEqual(["notified"]);
+    const bad = await app.inject({ method: "POST", url: `/api/orgs/${orgId}/nudge-dispatch`, headers: { authorization: "Bearer wrong" } });
+    expect(bad.statusCode).toBe(401);
+    await app.close();
+    await pool.end();
+  });
+});

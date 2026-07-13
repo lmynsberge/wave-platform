@@ -60,7 +60,7 @@ const DEDUP_DAYS = 7;
 const GAP_TEXT = "You've got signal building — a quick `checkin` with your companion is a good way to keep it moving.";
 const ASKS_TEXT = "A colleague asked for your perspective. Send `asks` to see what's waiting.";
 
-export function registerOutboundRoutes(app: FastifyInstance, pool: Pool, core: CoreClient, fetchImpl: typeof fetch) {
+export function registerOutboundRoutes(app: FastifyInstance, pool: Pool, core: CoreClient, fetchImpl: typeof fetch, opts?: { dispatchToken?: string }) {
   const transports = new Map<string, OutboundTransport>();
   if (process.env.BRIDGE_TEST_OUTBOUND_URL) transports.set("test", testTransport(process.env.BRIDGE_TEST_OUTBOUND_URL, fetchImpl));
   if (process.env.SLACK_BOT_TOKEN) transports.set("slack", slackTransport(process.env.SLACK_BOT_TOKEN, fetchImpl));
@@ -68,14 +68,20 @@ export function registerOutboundRoutes(app: FastifyInstance, pool: Pool, core: C
 
   app.post("/api/orgs/:orgId/nudge-dispatch", async (req, reply) => {
     const { orgId } = req.params as { orgId: string };
-    const user = await currentUser(pool, req);
-    if (!user) return reply.status(401).send({ error: "unauthenticated" });
-    const { rows: roleRows } = await pool.query(
-      "SELECT role FROM memberships WHERE org_id = $1 AND user_id = $2", [orgId, user.id],
-    );
-    const role = roleRows[0]?.role as string | undefined;
-    if (!role) return reply.status(404).send({ error: "not_found" });
-    if (role !== "owner" && role !== "admin") return reply.status(403).send({ error: "insufficient_role" });
+    // SPEC-016 R7: system path for Cloud Scheduler — constant-time-ish equality on a generated token
+    const auth = req.headers.authorization;
+    const isSystem = opts?.dispatchToken && auth === `Bearer ${opts.dispatchToken}`;
+    if (auth?.startsWith("Bearer ") && !isSystem) return reply.status(401).send({ error: "unauthenticated" });
+    if (!isSystem) {
+      const user = await currentUser(pool, req);
+      if (!user) return reply.status(401).send({ error: "unauthenticated" });
+      const { rows: roleRows } = await pool.query(
+        "SELECT role FROM memberships WHERE org_id = $1 AND user_id = $2", [orgId, user.id],
+      );
+      const role = roleRows[0]?.role as string | undefined;
+      if (!role) return reply.status(404).send({ error: "not_found" });
+      if (role !== "owner" && role !== "admin") return reply.status(403).send({ error: "insufficient_role" });
+    }
 
     const { rows: bindings } = await pool.query(
       "SELECT platform, external_id AS \"externalId\", user_id AS \"userId\" FROM bridge_bindings WHERE org_id = $1",
