@@ -38,7 +38,7 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 
 ## ✨ Enhancements — product
 **Manager experience (biggest UI gap):** validation queue UI, upward-decision UI, team-signal dashboard view — the APIs exist (SPEC-005/010), no screens do.
-**Individual:** trajectory/history on profile (needs longitudinal storage) · inbox read-state · anonymity preferences UI · share revocation · "first in cohort" copy for percentile 0 · ~~link-code UI~~ (SPEC-019) · re-request after a fulfilled pair · ~~invitations~~ (SPEC-020; EMAIL DELIVERY still open) · invite revoke UI
+**Individual:** trajectory/history on profile (needs longitudinal storage) · inbox read-state · anonymity preferences UI · share revocation · "first in cohort" copy for percentile 0 · ~~link-code UI~~ (SPEC-019) · re-request after a fulfilled pair · ~~invitations~~ (SPEC-020) · ~~email delivery seam~~ (SPEC-021 — noop default; REAL VENDOR ADAPTER (SES/SendGrid) is the drop-in remaining) · invite revoke UI
 **Companion/LLM:** LLM-composed nudge & ask messages · streaming replies · token budgeting · content moderation pass · nudges for never-touched attributes (needs the AI layer to propose attributes)
 **Feedback engine:** multi-validator upward consensus (single-decider today) · per-org/env-configurable significance thresholds · shares-as-evidence (MUST route through SPEC-003 rules — SPEC-007 review finding 5)
 **Ingestion:** CSV upload UI · named source adapters (Culture Amp first, per wave-preview) · scheduled connector pulls · cron wrapper for nudge-dispatch · digest batching for notifications

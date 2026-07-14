@@ -106,3 +106,6 @@ Red commit (missing module) → H01+H02 commit → artifacts.
 
 ### SPEC-020 — Invitations (TDD)
 Red commit (3/3) → H01 server commit → H02 web commit (suite caught a real 404-as-success crash) → artifacts. Locked file untouched red→green.
+
+### SPEC-021 — Email provider (TDD two tiers)
+Red commit → H01+H02 implementation commit (one shadowing fix) → H03 TF/artifacts commit. Locked files untouched red→green.

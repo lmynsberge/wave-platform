@@ -1,7 +1,7 @@
 ---
 id: SPEC-021
 title: Injectable email provider — invite delivery (no-op default)
-status: approved
+status: done
 author: spec-architect
 signed_off: true
 workstreams: [server]

@@ -34,6 +34,8 @@ Post-v1 delivered:
 - **SPEC-019 — Settings UI**: DONE, TDD — link-code minting, notifications toggle, admin LLM config with legible trust copy
 - **SPEC-020 — Invitations & org join**: DONE, TDD — email-bound invite links, inline signup/login accept flow, admin pending list
 
+- **SPEC-021 — Injectable email provider**: DONE, TDD both tiers — noop default (log+metrics), HTTP test provider proving the seam, invite delivery fail-soft
+
 Remaining for design-partner readiness: BYO-key envelope encryption (REQUIRED, SPEC-014 gate), notification opt-out (REQUIRED, SPEC-013 gate), staging verification of vendor adapters + Slack/Teams transports, Teams AAD JWT, link-code UI in web settings, SSO, deployment, cron for dispatch.
 
 Cross-cutting: **SPEC-QA-001 — spec-locked integration harness**: DONE — itest/ with per-spec black-box files (16 tests, real stack), TDD-from-spec rule active from SPEC-007, lock rule enforced in review.

@@ -118,9 +118,11 @@ module "server" {
   cloudsql_instance = module.db.connection_name
   # THE PRODUCTION ALLOWLIST (rule 5 / gate G5): BRIDGE_TEST_SECRET deliberately absent.
   env = {
-    CORE_URL      = module.core.uri
-    WEB_DIST      = "/app/web-dist"
-    COOKIE_SECURE = "1" # gate G3
+    CORE_URL       = module.core.uri
+    WEB_DIST       = "/app/web-dist"
+    COOKIE_SECURE  = "1"                # gate G3
+    EMAIL_PROVIDER = var.email_provider # SPEC-021: noop default (log + metrics)
+    APP_BASE_URL   = var.app_base_url
   }
   secret_env = {
     DATABASE_URL         = google_secret_manager_secret.server_db_url.secret_id
