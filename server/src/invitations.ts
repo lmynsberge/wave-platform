@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { currentUser } from "./auth.js";
+import { resolveEmailProvider } from "./email.js";
 import type { Pool } from "./db.js";
 
 /**
@@ -16,6 +17,8 @@ export const isPending = (expiresAt: Date, acceptedAt: Date | null, now = new Da
 const createSchema = z.object({ email: z.string().email(), role: z.enum(["member", "admin"]) });
 
 export function registerInvitationRoutes(app: FastifyInstance, pool: Pool) {
+  const mailer = resolveEmailProvider(process.env);
+  const appBase = process.env.APP_BASE_URL ?? "";
   const adminGate = async (req: Parameters<typeof currentUser>[1], orgId: string) => {
     const user = await currentUser(pool, req);
     if (!user) return { code: 401 as const };
@@ -46,6 +49,13 @@ export function registerInvitationRoutes(app: FastifyInstance, pool: Pool) {
        RETURNING id, email, role, token, expires_at AS "expiresAt"`,
       [orgId, email, parsed.data.role, token, g.userId, expiresAt],
     );
+    // SPEC-021 R3: send AFTER durable creation; failure never surfaces
+    const { rows: orgRows } = await pool.query("SELECT name FROM organizations WHERE id = $1", [orgId]);
+    void mailer.send({
+      to: rows[0].email,
+      subject: `You're invited to join ${orgRows[0]?.name ?? "your team"} on Wave`,
+      text: `You've been invited to join ${orgRows[0]?.name ?? "your team"} on Wave as a ${rows[0].role}.\n\nAccept here: ${appBase}/invite/${rows[0].token}\n\nThis link is bound to ${rows[0].email} and expires in 7 days.`,
+    }).catch(() => { /* fail soft */ });
     return reply.status(201).send({ invitation: rows[0] });
   });
 
