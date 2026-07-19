@@ -17,7 +17,11 @@ services:
     build: ./core
     environment:
       CORE_PORT: "8081"
+      DATABASE_URL: postgres://wave:wave@postgres:5432/wave
     ports: ["8081:8081"]
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   server:
     build:
@@ -26,6 +30,7 @@ services:
     environment:
       CORE_URL: http://core:8081
       PORT: "8080"
+      DATABASE_URL: postgres://wave:wave@postgres:5432/wave
     ports: ["8080:8080"]
     depends_on: [core]
 
