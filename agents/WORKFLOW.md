@@ -46,7 +46,7 @@ Before decomposition, the Spec Architect writes `itest/tests/spec-###.itest.ts` 
 Any agent that hits a blocker, ambiguity, or spec conflict:
 
 1. STOP. Do not guess or silently deviate.
-2. File `issues/ISS-###-<slug>.md` from the template, referencing the spec/handoff.
+2. File a GitHub Issue titled `ISS-###: <summary>` (next free ISS number; body from `agents/templates/ISSUE_TEMPLATE.md`), referencing the spec/handoff.
 3. Escalate exactly one tier up (Implementer → Lead, Lead → Spec Architect/Orchestrator, Reviewer disputes → Orchestrator).
 4. The resolver writes the resolution INTO the issue file and, if the spec changed, amends the spec and re-triggers spec review (fast-track: reviewer may scope review to the delta).
 5. Work resumes only after the issue status is `resolved`.
@@ -56,8 +56,8 @@ Severity levels: `blocking` (work stopped), `degraded` (workaround exists, debt 
 ## Locked-test defect path (proven in SPEC-014 / ISS-005)
 When implementation reveals a defect IN a locked itest (not in the code): STOP → file ISS-### stating why the code is spec-conformant and the test is not → spec amendment A# describing the minimal edit → Spec Reviewer delta-review → edit the locked file citing both IDs in the commit. Assertions may not be weakened; if a fix would weaken an assertion, that is a spec problem, not a test problem.
 
-## Environment durability protocol (ISS-003)
-Commit early; refresh the recovery bundle in persistent storage after EVERY commit (`git bundle create <outputs>/wave-platform.bundle --all`). On environment reset: clone from the bundle, reinstall only the toolchains the current spec needs, restart Postgres before test runs.
+## Environment durability protocol (ISS-003) — RETIRED 2026-07-19
+_Applied only to the original ephemeral agent environment (no pushable origin, volatile filesystem). With a durable workspace and GitHub write access, commit-and-push replaces the bundle protocol._ Historical: commit early; refresh the recovery bundle in persistent storage after every commit; on environment reset, clone from the bundle.
 
 ## Harness listener pattern (SPEC-013/014)
 To black-box-test outbound integrations or third-party API calls: the locked itest runs its own HTTP listener; the harness exports the URL via env; assertions run on CAPTURED WIRE TRAFFIC. Prefer this over mocks whenever data crosses the trust boundary (it is how redaction is actually proven).

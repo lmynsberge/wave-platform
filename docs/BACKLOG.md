@@ -56,6 +56,4 @@ _Harvested from every handoff follow-up, review finding, issue, and the founding
 - **Premium tier** boundary per pricing decision #3 (outward-facing free; self-serve depth paid)
 
 ## 🏗️ Infrastructure (agent environment)
-- ISS-001: GitHub App write access (unblocks direct push/PR; retires the bundle protocol)
-- ISS-002: docker in agent env (unblocks compose-level AC verification)
-- ISS-003: durable workspace (bundle protocol remains the mitigation)
+_Resolved 2026-07-19 by the move to a local agent with GitHub write access, Docker, and a durable workspace (ISS-001/002/003 — see GitHub Issues; the bundle protocol is retired)._

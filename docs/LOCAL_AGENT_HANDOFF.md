@@ -233,5 +233,5 @@ true`; safe to unpause now that opt-out shipped in SPEC-017 — set the real org
 - Process rules: `agents/README.md`, `agents/WORKFLOW.md`
 - Deploy: `docs/DEPLOYMENT_PLAN.md` (plan), `DEPLOY.md` (commands), `infra/README.md` (TF rules)
 - Demo script: `DEMO.md`
-- CI→GCP setup (deferred): `issues/ISS-006-ci-gcp-wif-setup.md` (until Job 1 moves it to GitHub Issues)
+- CI→GCP setup (deferred): [GitHub issue #4 (ISS-006)](https://github.com/lmynsberge/wave-platform/issues/4) — migrated from `issues/` by Job 1
 - Spec→commit map: `docs/TRACEABILITY.md`
