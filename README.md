@@ -18,10 +18,11 @@ Core trust primitives: manager-as-validator (never rater), statistical-significa
 | `handoffs/` | Decomposed task handoffs from workstream leads to implementers |
 | `reviews/` | Spec reviews and code review records |
 | `itest/` | **Spec-locked integration tests** — one black-box file per spec, designed in the spec phase, immutable without a spec change (SPEC-QA-001) |
-| `issues/` | Intermediate issues, blockers, escalations |
 | `core/` | Rust — domain core: scoring, normalization, signal/validation engine |
 | `server/` | TypeScript Node — API/BFF, integrations, chat orchestration |
 | `web/` | React — frontend |
+
+Issues, blockers, and escalations are tracked in [GitHub Issues](https://github.com/lmynsberge/wave-platform/issues) (titles carry the `ISS-###` IDs referenced throughout the repo).
 
 ## Stack
 

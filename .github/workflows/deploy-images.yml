@@ -1,7 +1,7 @@
 # SPEC-016 R8: CI builds images; Terraform only references them.
 # Auth: Workload Identity Federation — no key files. Setup in DEPLOY.md.
 name: build-and-push-images
-# Manual-dispatch only until CI→GCP auth is configured (see issues/ISS-006).
+# Manual-dispatch only until CI→GCP auth is configured (see GitHub issue #4, "ISS-006").
 # Re-enable the push trigger below once GCP_WIF_PROVIDER / GCP_CI_SA / GCP_PROJECT
 # repo secrets exist, otherwise every push to main fails on missing auth.
 on:
