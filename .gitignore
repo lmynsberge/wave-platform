@@ -4,3 +4,10 @@ target/
 .env
 *.log
 .DS_Store
+
+# Terraform (lock files ARE committed; state, plans, and env tfvars are not)
+.terraform/
+*.tfplan
+*.tfstate
+*.tfstate.backup
+infra/envs/*/terraform.tfvars

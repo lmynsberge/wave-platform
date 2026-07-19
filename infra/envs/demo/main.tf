@@ -105,6 +105,7 @@ module "core" {
   cloudsql_instance = module.db.connection_name
   env               = { CORE_PORT = "8080" }
   secret_env        = { DATABASE_URL = google_secret_manager_secret.core_db_url.secret_id }
+  depends_on        = [module.db] # boot needs the SQL user, not just the instance (ISS-010)
 }
 
 module "server" {
@@ -131,6 +132,7 @@ module "server" {
     # Vendor secrets (values added out-of-band, see DEPLOY.md; adapters self-disable when absent):
     # SLACK_SIGNING_SECRET / SLACK_BOT_TOKEN / TEAMS_SHARED_SECRET / LLM_API_KEY
   }
+  depends_on = [module.db] # boot needs the SQL user, not just the instance (ISS-010)
 }
 
 resource "google_cloud_run_v2_job" "migrate" {
