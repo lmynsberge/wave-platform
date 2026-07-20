@@ -33,3 +33,8 @@ variable "max_instances" {
   default = 2 # cost ceiling; raise deliberately
 }
 variable "service_account" { type = string }
+variable "vpc_subnet" {
+  type        = string
+  default     = ""
+  description = "Subnetwork self-link for Direct VPC egress (ALL_TRAFFIC). Required for a service to call internal-ingress services or a private-IP Cloud SQL instance (ISS-011). Empty = no VPC egress."
+}

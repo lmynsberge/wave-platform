@@ -10,6 +10,10 @@ terraform {
 variable "project_id" { type = string }
 variable "region" { type = string }
 variable "name" { type = string }
+variable "private_network" {
+  type        = string
+  description = "VPC self-link for private IP (ISS-011). The caller must ensure the service networking connection exists first (module-level depends_on)."
+}
 
 resource "google_sql_database_instance" "pg" {
   name             = var.name
@@ -19,7 +23,12 @@ resource "google_sql_database_instance" "pg" {
   settings {
     tier    = "db-f1-micro"
     edition = "ENTERPRISE"
-    ip_configuration { ipv4_enabled = true }
+    # Private IP only (ISS-011): reachable solely from the VPC; was public IP + connector.
+    # This was the roadmap's "first design-partner upgrade," pulled forward.
+    ip_configuration {
+      ipv4_enabled    = false
+      private_network = var.private_network
+    }
     user_labels = { app = "wave", managed-by = "terraform" }
   }
   deletion_protection = false # demo env; flip for real data

@@ -21,6 +21,18 @@ resource "google_cloud_run_v2_service" "this" {
       min_instance_count = 0 # cold starts accepted by decision; not a variable on purpose
       max_instance_count = var.max_instances
     }
+    # Direct VPC egress: makes this service's calls "internal" to internal-ingress peers and
+    # reaches private-IP Cloud SQL. ALL_TRAFFIC + Private Google Access on the subnet covers
+    # *.run.app and Google APIs; external (non-Google) egress needs Cloud NAT — none in the demo.
+    dynamic "vpc_access" {
+      for_each = var.vpc_subnet == "" ? [] : [1]
+      content {
+        network_interfaces {
+          subnetwork = var.vpc_subnet
+        }
+        egress = "ALL_TRAFFIC"
+      }
+    }
     dynamic "volumes" {
       for_each = var.cloudsql_instance == "" ? [] : [1]
       content {
