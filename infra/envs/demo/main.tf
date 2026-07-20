@@ -28,11 +28,43 @@ resource "google_project_iam_member" "run_secrets" {
   member  = "serviceAccount:${google_service_account.run.email}"
 }
 
+# ISS-011: dedicated VPC so service-to-service traffic is actually internal on Cloud Run.
+# Callers (server, jobs) use Direct VPC egress; core's internal ingress admits VPC traffic;
+# Private Google Access carries *.run.app + Google APIs; Cloud SQL is private-IP in this VPC.
+resource "google_compute_network" "vpc" {
+  name                    = "wave-${local.env}-vpc"
+  project                 = var.project_id
+  auto_create_subnetworks = false
+}
+resource "google_compute_subnetwork" "vpc" {
+  name                     = "wave-${local.env}-subnet"
+  project                  = var.project_id
+  region                   = var.region
+  network                  = google_compute_network.vpc.id
+  ip_cidr_range            = "10.10.0.0/24"
+  private_ip_google_access = true # run.app + googleapis without external IPs or NAT
+}
+resource "google_compute_global_address" "psa_range" {
+  name          = "wave-${local.env}-psa"
+  project       = var.project_id
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.vpc.id
+}
+resource "google_service_networking_connection" "psa" {
+  network                 = google_compute_network.vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.psa_range.name]
+}
+
 module "db" {
-  source     = "../../modules/database"
-  project_id = var.project_id
-  region     = var.region
-  name       = "wave-${local.env}"
+  source          = "../../modules/database"
+  project_id      = var.project_id
+  region          = var.region
+  name            = "wave-${local.env}"
+  private_network = google_compute_network.vpc.id
+  depends_on      = [google_service_networking_connection.psa]
 }
 
 # Generated infra credentials (state-resident by rule 4): DATABASE_URLs + dispatch token
@@ -105,6 +137,8 @@ module "core" {
   cloudsql_instance = module.db.connection_name
   env               = { CORE_PORT = "8080" }
   secret_env        = { DATABASE_URL = google_secret_manager_secret.core_db_url.secret_id }
+  vpc_subnet        = google_compute_subnetwork.vpc.id # ISS-011: reach private-IP SQL
+  depends_on        = [module.db]                      # boot needs the SQL user, not just the instance (ISS-010)
 }
 
 module "server" {
@@ -131,6 +165,8 @@ module "server" {
     # Vendor secrets (values added out-of-band, see DEPLOY.md; adapters self-disable when absent):
     # SLACK_SIGNING_SECRET / SLACK_BOT_TOKEN / TEAMS_SHARED_SECRET / LLM_API_KEY
   }
+  vpc_subnet = google_compute_subnetwork.vpc.id # ISS-011: makes server→core internal; reaches private SQL
+  depends_on = [module.db]                      # boot needs the SQL user, not just the instance (ISS-010)
 }
 
 resource "google_cloud_run_v2_job" "migrate" {
@@ -140,6 +176,12 @@ resource "google_cloud_run_v2_job" "migrate" {
   template {
     template {
       service_account = google_service_account.run.email
+      vpc_access {
+        network_interfaces {
+          subnetwork = google_compute_subnetwork.vpc.id
+        }
+        egress = "ALL_TRAFFIC" # ISS-011: private-IP SQL is only reachable via the VPC
+      }
       volumes {
         name = "cloudsql"
         cloud_sql_instance { instances = [module.db.connection_name] }
