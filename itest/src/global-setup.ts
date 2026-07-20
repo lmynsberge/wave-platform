@@ -69,6 +69,7 @@ export async function setup() {
   await waitFor(`http://127.0.0.1:${SERVER_PORT}/health`);
   process.env.IT_SERVER_URL = `http://127.0.0.1:${SERVER_PORT}`;
   process.env.IT_CORE_URL = `http://127.0.0.1:${CORE_PORT}`;
+  process.env.IT_SERVER_DB = SERVER_DB;
 }
 
 export async function teardown() {
