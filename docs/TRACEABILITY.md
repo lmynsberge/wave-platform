@@ -109,3 +109,6 @@ Red commit (3/3) → H01 server commit → H02 web commit (suite caught a real 4
 
 ### SPEC-021 — Email provider (TDD two tiers)
 Red commit → H01+H02 implementation commit (one shadowing fix) → H03 TF/artifacts commit. Locked files untouched red→green.
+
+### SPEC-022 — Org access requests (TDD)
+Red commit (5/5 missing-route) → H01 server commit (migration 009 + endpoints) → H02 web commit (JoinOrgs panel + Settings decisions) → artifacts. Locked file untouched red→green.
