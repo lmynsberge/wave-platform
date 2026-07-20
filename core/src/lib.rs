@@ -1,3 +1,4 @@
+pub mod admin;
 pub mod db;
 pub mod domain;
 
@@ -11,7 +12,9 @@ pub fn app() -> Router {
 }
 
 pub fn app_with_db(pool: deadpool_postgres::Pool) -> Router {
-    app().merge(domain::routes(pool))
+    app()
+        .merge(domain::routes(pool.clone()))
+        .merge(admin::routes(pool))
 }
 
 async fn health() -> Json<Value> {
