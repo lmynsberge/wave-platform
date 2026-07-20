@@ -109,3 +109,6 @@ Red commit (3/3) → H01 server commit → H02 web commit (suite caught a real 4
 
 ### SPEC-021 — Email provider (TDD two tiers)
 Red commit → H01+H02 implementation commit (one shadowing fix) → H03 TF/artifacts commit. Locked files untouched red→green.
+
+### SPEC-023 — Account merge tool (TDD, CLI-as-interface)
+Red commit (2/2 missing-tool; AC5 red-quality hardened pre-lock) → H01 core commit (admin merge + repairs) → H02 script commit (migration 010 + CLI) → H03 action/artifacts commit. Locked file untouched red→green.

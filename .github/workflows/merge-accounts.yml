@@ -1,0 +1,53 @@
+# SPEC-023 R8: wave-internal account merge, operator-triggered only.
+# Runs scripts/merge-accounts.mjs against the demo environment.
+# Auth: Workload Identity Federation (same secrets as deploy-images.yml).
+# Required repo secrets beyond WIF: MERGE_SQL_INSTANCE (Cloud SQL connection name),
+# MERGE_DATABASE_URL (server DB via 127.0.0.1:5432 through the proxy),
+# MERGE_CORE_URL (internal core — needs the DEPLOY.md ingress toggle until the
+# Cloud Run Job path lands; see the SPEC-023 future-enhancement issue).
+name: merge-accounts
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "Account to merge FROM (email or UUID) — will be tombstoned"
+        required: true
+      into:
+        description: "Surviving account (email or UUID)"
+        required: true
+      dry_run:
+        description: "Report what would change without changing anything"
+        type: boolean
+        default: true
+
+concurrency: merge-accounts   # merges are serialized; never concurrent
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: server/package-lock.json }
+      - run: npm ci --omit=dev
+        working-directory: server   # the script resolves pg from server/node_modules
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_CI_SA }}
+      - name: Start Cloud SQL Auth Proxy
+        run: |
+          curl -sSLo cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.0/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy --port 5432 "${{ secrets.MERGE_SQL_INSTANCE }}" &
+          sleep 3
+      - name: Merge
+        env:
+          DATABASE_URL: ${{ secrets.MERGE_DATABASE_URL }}
+          CORE_URL: ${{ secrets.MERGE_CORE_URL }}
+        run: |
+          node scripts/merge-accounts.mjs \
+            --from "${{ inputs.from }}" \
+            --into "${{ inputs.into }}" \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
