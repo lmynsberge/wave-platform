@@ -43,6 +43,10 @@ node ../../scripts/seed-demo.mjs $APP_URL      # NOTE: seed's direct-core steps 
 ```
 Open `$APP_URL`. Logins in DEMO.md (password `demo-password-1`).
 
+To enable demo mode (SPEC-024), set `DEMO_PERSONA_EMAIL=priya@meridian.demo` on the server service.
+RULE: this env must ONLY ever name a seeded synthetic account — demo mode shows that account's
+private surfaces (companion thread included) to any signed-in zero-org user. Never a real person.
+
 ## 5. Vendor secrets (only when enabling integrations; adapters self-disable when absent)
 ```bash
 echo -n "$SLACK_SIGNING_SECRET" | gcloud secrets versions add wave-demo-slack-signing --data-file=-   # after adding the container + secret_env entry in main.tf

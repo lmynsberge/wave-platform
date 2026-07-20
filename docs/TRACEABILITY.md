@@ -112,3 +112,6 @@ Red commit → H01+H02 implementation commit (one shadowing fix) → H03 TF/arti
 
 ### SPEC-022 — Org access requests (TDD)
 Red commit (5/5 missing-route) → H01 server commit (migration 009 + endpoints) → H02 web commit (JoinOrgs panel + Settings decisions) → artifacts. Locked file untouched red→green.
+
+### SPEC-024 — Demo mode (TDD)
+Red commit (missing /api/demo route) → H01 server commit (migration 011, persona identity, choke-point guard) → H02 web commit (explore + banner) → artifacts + DEPLOY synthetic-persona rule. Locked file untouched red→green.
