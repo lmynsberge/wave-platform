@@ -13,6 +13,8 @@ resource "google_cloud_run_v2_service" "this" {
 
   ingress = var.ingress == "public" ? "INGRESS_TRAFFIC_ALL" : "INGRESS_TRAFFIC_INTERNAL_ONLY"
 
+  deletion_protection = false # demo env, stateless services (data lives in Cloud SQL); flip for real orgs
+
   template {
     service_account = var.service_account
     scaling {
@@ -62,8 +64,11 @@ resource "google_cloud_run_v2_service" "this" {
   labels = { app = "wave", managed-by = "terraform" }
 }
 
+# Unauthenticated invoker for BOTH ingress modes (ISS-010): the trust boundary is network
+# topology (SPEC-016) — internal services are gated by INGRESS_TRAFFIC_INTERNAL_ONLY, not IAM.
+# Without this, same-project callers (server → core) get 403 at the IAM layer.
 resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
-  count    = var.ingress == "public" ? 1 : 0
+  count    = 1
   project  = var.project_id
   location = var.region
   name     = google_cloud_run_v2_service.this.name
