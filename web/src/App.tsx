@@ -8,6 +8,7 @@ import { TeamView } from "./TeamView";
 import { InboxPanel } from "./InboxPanel";
 import { InviteAccept } from "./InviteAccept";
 import { ProfileCards } from "./ProfileCards";
+import { JoinOrgs } from "./JoinOrgs";
 
 function AuthScreen() {
   const qc = useQueryClient();
@@ -78,7 +79,7 @@ export default function App() {
             ))}
           </select>
         ) : (
-          <div className="empty">You're not part of an organization yet. Ask an admin to add you.</div>
+          <div className="empty">You're not part of an organization yet — request access on the right.</div>
         )}
         <div className="views">
           <button className={view === "profile" ? "" : "ghost"} onClick={() => setView("profile")}>Profile</button>
@@ -95,7 +96,8 @@ export default function App() {
         </button>
       </nav>
       <main>
-        {view === "profile" && (<><h2>Your signal</h2>{activeOrg ? <ProfileCards orgId={activeOrg} userId={me.data.user.id} /> : null}</>)}
+        {!activeOrg ? <JoinOrgs /> : null}
+        {view === "profile" && activeOrg && (<><h2>Your signal</h2><ProfileCards orgId={activeOrg} userId={me.data.user.id} /></>)}
         {view === "companion" && activeOrg ? <CompanionView orgId={activeOrg} /> : null}
         {view === "grow" && activeOrg ? <GrowView orgId={activeOrg} /> : null}
         {view === "team" && activeOrg ? <TeamView orgId={activeOrg} /> : null}

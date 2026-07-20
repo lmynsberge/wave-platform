@@ -5,7 +5,9 @@ async fn main() {
     let port = std::env::var("CORE_PORT").unwrap_or_else(|_| "8081".to_string());
     let addr = format!("0.0.0.0:{port}");
     let pool = db::create_pool(&db::database_url());
-    db::migrate(&pool, "migrations").await.expect("migration failure");
+    db::migrate(&pool, "migrations")
+        .await
+        .expect("migration failure");
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .expect("failed to bind");

@@ -77,6 +77,8 @@ jobs:
         working-directory: core
       - run: npm run itest
         working-directory: itest
+      - run: npm run test:e2e
+        working-directory: server
 
   terraform:
     runs-on: ubuntu-latest

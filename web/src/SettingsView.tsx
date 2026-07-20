@@ -3,6 +3,7 @@ import { useState } from "react";
 
 interface LlmConfig { provider: string; baseUrl: string | null; model: string; apiKey: string | null }
 interface Invitation { id: string; email: string; role: string; token: string; expiresAt: string }
+interface JoinRequest { id: string; userId: string; name: string; email: string; createdAt: string }
 
 export function SettingsView({ orgId, role }: { orgId: string; role: string }) {
   const qc = useQueryClient();
@@ -68,6 +69,25 @@ export function SettingsView({ orgId, role }: { orgId: string; role: string }) {
       return (await res.json()) as { invitation: Invitation };
     },
     onSuccess: (d) => { setLastLink(`/invite/${d.invitation.token}`); setInviteForm({ email: "", role: "member" }); void qc.invalidateQueries({ queryKey: ["invites", orgId] }); },
+  });
+  const joinRequests = useQuery({
+    queryKey: ["joinRequests", orgId],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const res = await fetch(`/api/orgs/${orgId}/join-requests`);
+      if (!res.ok) throw new Error("join requests load failed");
+      return (await res.json()) as { requests: JoinRequest[] };
+    },
+    retry: false,
+  });
+  const decideJoin = useMutation({
+    mutationFn: async ({ id, action }: { id: string; action: "approve" | "decline" }) => {
+      const res = await fetch(`/api/orgs/${orgId}/join-requests/${id}/${action}`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}),
+      });
+      if (!res.ok) throw new Error("decision failed");
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: ["joinRequests", orgId] }),
   });
   const saveLlm = useMutation({
     mutationFn: async () => {
@@ -137,6 +157,22 @@ export function SettingsView({ orgId, role }: { orgId: string; role: string }) {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {isAdmin && (
+        <section>
+          <h2>Join requests</h2>
+          <p className="hint">People who asked to join this organization. Approving adds them as a member.</p>
+          {joinRequests.isSuccess && (joinRequests.data.requests ?? []).length === 0 && <p>No pending requests.</p>}
+          {joinRequests.isSuccess && (joinRequests.data.requests ?? []).map((r) => (
+            <div className="card" key={r.id}>
+              {r.name} · {r.email}{" "}
+              <button disabled={decideJoin.isPending} onClick={() => decideJoin.mutate({ id: r.id, action: "approve" })}>Approve</button>{" "}
+              <button className="ghost" disabled={decideJoin.isPending} onClick={() => decideJoin.mutate({ id: r.id, action: "decline" })}>Decline</button>
+            </div>
+          ))}
+          {decideJoin.isError && <div className="banner" role="alert">That decision didn't stick — try again.</div>}
         </section>
       )}
 

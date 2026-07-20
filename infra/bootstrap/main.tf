@@ -25,6 +25,8 @@ resource "google_project_service" "apis" {
     "artifactregistry.googleapis.com",
     "cloudscheduler.googleapis.com",
     "iam.googleapis.com",
+    "compute.googleapis.com",           # ISS-011: VPC for internal service-to-service traffic
+    "servicenetworking.googleapis.com", # ISS-011: private services access for Cloud SQL private IP
   ])
   service            = each.value
   disable_on_destroy = false

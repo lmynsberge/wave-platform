@@ -5,7 +5,9 @@ use serde_json::{json, Value};
 use tower::ServiceExt;
 use uuid::Uuid;
 
-async fn setup() -> axum::Router { setup2("wave_core_test").await }
+async fn setup() -> axum::Router {
+    setup2("wave_core_test").await
+}
 
 async fn setup2(db: &str) -> axum::Router {
     let url = format!("postgres://wave:wave@localhost:5432/{db}");
@@ -17,8 +19,13 @@ async fn setup2(db: &str) -> axum::Router {
     .await
     .unwrap();
     tokio::spawn(conn);
-    let _ = admin.execute(&format!("DROP DATABASE IF EXISTS {db} WITH (FORCE)"), &[]).await;
-    admin.execute(&format!("CREATE DATABASE {db}"), &[]).await.unwrap();
+    let _ = admin
+        .execute(&format!("DROP DATABASE IF EXISTS {db} WITH (FORCE)"), &[])
+        .await;
+    admin
+        .execute(&format!("CREATE DATABASE {db}"), &[])
+        .await
+        .unwrap();
 
     let pool = wave_core::db::create_pool(&url);
     wave_core::db::migrate(&pool, "migrations").await.unwrap();
@@ -26,17 +33,29 @@ async fn setup2(db: &str) -> axum::Router {
     wave_core::app_with_db(pool)
 }
 
-async fn call(app: &axum::Router, method: &str, path: &str, body: Option<Value>) -> (StatusCode, Value) {
+async fn call(
+    app: &axum::Router,
+    method: &str,
+    path: &str,
+    body: Option<Value>,
+) -> (StatusCode, Value) {
     let req = Request::builder()
         .method(method)
         .uri(path)
         .header("content-type", "application/json")
-        .body(body.map(|b| Body::from(b.to_string())).unwrap_or_else(Body::empty))
+        .body(
+            body.map(|b| Body::from(b.to_string()))
+                .unwrap_or_else(Body::empty),
+        )
         .unwrap();
     let res = app.clone().oneshot(req).await.unwrap();
     let status = res.status();
     let bytes = res.into_body().collect().await.unwrap().to_bytes();
-    let val = if bytes.is_empty() { json!(null) } else { serde_json::from_slice(&bytes).unwrap() };
+    let val = if bytes.is_empty() {
+        json!(null)
+    } else {
+        serde_json::from_slice(&bytes).unwrap()
+    };
     (status, val)
 }
 
@@ -49,23 +68,54 @@ async fn structural_rules_and_summary() {
     let carol = Uuid::new_v4();
 
     // seed attributes
-    for (key, kind) in [("leadership", "subjective"), ("billable_hours", "objective")] {
-        let (s, _) = call(&app, "POST", "/v1/attributes",
-            Some(json!({"key": key, "name": key, "kind": kind}))).await;
+    for (key, kind) in [
+        ("leadership", "subjective"),
+        ("billable_hours", "objective"),
+    ] {
+        let (s, _) = call(
+            &app,
+            "POST",
+            "/v1/attributes",
+            Some(json!({"key": key, "name": key, "kind": kind})),
+        )
+        .await;
         assert_eq!(s, StatusCode::CREATED);
     }
-    let (s, _) = call(&app, "POST", "/v1/attributes",
-        Some(json!({"key": "leadership", "name": "dup", "kind": "subjective"}))).await;
+    let (s, _) = call(
+        &app,
+        "POST",
+        "/v1/attributes",
+        Some(json!({"key": "leadership", "name": "dup", "kind": "subjective"})),
+    )
+    .await;
     assert_eq!(s, StatusCode::CONFLICT);
 
     // AC1: R3 structural rules
     let cases = [
-        (json!({"orgId": org, "subjectUserId": alice, "authorUserId": null, "attributeKey": "leadership", "note": "x"}), "subjective_requires_author"),
-        (json!({"orgId": org, "subjectUserId": alice, "authorUserId": alice, "attributeKey": "leadership", "note": "x"}), "self_evidence"),
-        (json!({"orgId": org, "subjectUserId": alice, "authorUserId": bob, "attributeKey": "leadership", "valueNumeric": 5.0}), "kind_mismatch"),
-        (json!({"orgId": org, "subjectUserId": alice, "authorUserId": bob, "attributeKey": "billable_hours", "valueNumeric": 100.0}), "objective_requires_system"),
-        (json!({"orgId": org, "subjectUserId": alice, "authorUserId": null, "attributeKey": "billable_hours"}), "objective_requires_value"),
-        (json!({"orgId": org, "subjectUserId": alice, "authorUserId": bob, "attributeKey": "nope", "note": "x"}), "unknown_attribute"),
+        (
+            json!({"orgId": org, "subjectUserId": alice, "authorUserId": null, "attributeKey": "leadership", "note": "x"}),
+            "subjective_requires_author",
+        ),
+        (
+            json!({"orgId": org, "subjectUserId": alice, "authorUserId": alice, "attributeKey": "leadership", "note": "x"}),
+            "self_evidence",
+        ),
+        (
+            json!({"orgId": org, "subjectUserId": alice, "authorUserId": bob, "attributeKey": "leadership", "valueNumeric": 5.0}),
+            "kind_mismatch",
+        ),
+        (
+            json!({"orgId": org, "subjectUserId": alice, "authorUserId": bob, "attributeKey": "billable_hours", "valueNumeric": 100.0}),
+            "objective_requires_system",
+        ),
+        (
+            json!({"orgId": org, "subjectUserId": alice, "authorUserId": null, "attributeKey": "billable_hours"}),
+            "objective_requires_value",
+        ),
+        (
+            json!({"orgId": org, "subjectUserId": alice, "authorUserId": bob, "attributeKey": "nope", "note": "x"}),
+            "unknown_attribute",
+        ),
     ];
     for (body, code) in cases {
         let (s, v) = call(&app, "POST", "/v1/evidence", Some(body)).await;
@@ -84,28 +134,67 @@ async fn structural_rules_and_summary() {
 
     // AC1: R4 validation rules
     let val_cases = [
-        (json!({"validatorUserId": bob, "outcome": "yes", "validatorRelationship": "peer"}), StatusCode::BAD_REQUEST, "own_evidence"),
-        (json!({"validatorUserId": alice, "outcome": "yes", "validatorRelationship": "peer"}), StatusCode::BAD_REQUEST, "own_subject"),
-        (json!({"validatorUserId": carol, "outcome": "maybe", "validatorRelationship": "peer"}), StatusCode::BAD_REQUEST, "invalid_outcome"),
+        (
+            json!({"validatorUserId": bob, "outcome": "yes", "validatorRelationship": "peer"}),
+            StatusCode::BAD_REQUEST,
+            "own_evidence",
+        ),
+        (
+            json!({"validatorUserId": alice, "outcome": "yes", "validatorRelationship": "peer"}),
+            StatusCode::BAD_REQUEST,
+            "own_subject",
+        ),
+        (
+            json!({"validatorUserId": carol, "outcome": "maybe", "validatorRelationship": "peer"}),
+            StatusCode::BAD_REQUEST,
+            "invalid_outcome",
+        ),
     ];
     for (body, status, code) in val_cases {
-        let (s, v) = call(&app, "POST", &format!("/v1/evidence/{ev_id}/validations"), Some(body)).await;
+        let (s, v) = call(
+            &app,
+            "POST",
+            &format!("/v1/evidence/{ev_id}/validations"),
+            Some(body),
+        )
+        .await;
         assert_eq!(s, status);
         assert_eq!(v["error"], code);
     }
-    let (s, _) = call(&app, "POST", &format!("/v1/evidence/{ev_id}/validations"),
-        Some(json!({"validatorUserId": carol, "outcome": "yes", "validatorRelationship": "peer"}))).await;
+    let (s, _) = call(
+        &app,
+        "POST",
+        &format!("/v1/evidence/{ev_id}/validations"),
+        Some(json!({"validatorUserId": carol, "outcome": "yes", "validatorRelationship": "peer"})),
+    )
+    .await;
     assert_eq!(s, StatusCode::CREATED);
-    let (s, v) = call(&app, "POST", &format!("/v1/evidence/{ev_id}/validations"),
-        Some(json!({"validatorUserId": carol, "outcome": "no", "validatorRelationship": "peer"}))).await;
+    let (s, v) = call(
+        &app,
+        "POST",
+        &format!("/v1/evidence/{ev_id}/validations"),
+        Some(json!({"validatorUserId": carol, "outcome": "no", "validatorRelationship": "peer"})),
+    )
+    .await;
     assert_eq!(s, StatusCode::CONFLICT);
     assert_eq!(v["error"], "duplicate_validation");
-    let (s, _) = call(&app, "POST", &format!("/v1/evidence/{}/validations", Uuid::new_v4()),
-        Some(json!({"validatorUserId": carol, "outcome": "yes", "validatorRelationship": "peer"}))).await;
+    let (s, _) = call(
+        &app,
+        "POST",
+        &format!("/v1/evidence/{}/validations", Uuid::new_v4()),
+        Some(json!({"validatorUserId": carol, "outcome": "yes", "validatorRelationship": "peer"})),
+    )
+    .await;
     assert_eq!(s, StatusCode::NOT_FOUND);
 
     // AC2: summary
-    let (s, v) = call(&app, "GET", &format!("/v1/users/{alice}/attributes?orgId={org}"), None).await;
+    let (s, v) = call(
+        &app,
+        "GET",
+        &format!("/v1/users/{alice}/attributes?orgId={org}"),
+        None,
+    )
+    .await;
     assert_eq!(s, StatusCode::OK);
     let attrs = v["attributes"].as_array().unwrap();
     assert_eq!(attrs.len(), 2);
@@ -119,19 +208,36 @@ async fn structural_rules_and_summary() {
     assert!(bill["score"].is_null());
 
     // empty user → empty list
-    let (s, v) = call(&app, "GET", &format!("/v1/users/{}/attributes?orgId={org}", Uuid::new_v4()), None).await;
+    let (s, v) = call(
+        &app,
+        "GET",
+        &format!("/v1/users/{}/attributes?orgId={org}", Uuid::new_v4()),
+        None,
+    )
+    .await;
     assert_eq!(s, StatusCode::OK);
     assert_eq!(v["attributes"].as_array().unwrap().len(), 0);
 }
 
-
 // ---- SPEC-004: significance engine ----
 
 async fn seed_attr(app: &axum::Router, key: &str, kind: &str) {
-    let (_s, _) = call(app, "POST", "/v1/attributes", Some(json!({"key": key, "name": key, "kind": kind}))).await;
+    let (_s, _) = call(
+        app,
+        "POST",
+        "/v1/attributes",
+        Some(json!({"key": key, "name": key, "kind": kind})),
+    )
+    .await;
 }
 
-async fn add_subjective(app: &axum::Router, org: Uuid, subject: Uuid, author: Uuid, key: &str) -> String {
+async fn add_subjective(
+    app: &axum::Router,
+    org: Uuid,
+    subject: Uuid,
+    author: Uuid,
+    key: &str,
+) -> String {
     let (s, v) = call(app, "POST", "/v1/evidence",
         Some(json!({"orgId": org, "subjectUserId": subject, "authorUserId": author, "attributeKey": key, "note": "n"}))).await;
     assert_eq!(s, StatusCode::CREATED);
@@ -139,15 +245,34 @@ async fn add_subjective(app: &axum::Router, org: Uuid, subject: Uuid, author: Uu
 }
 
 async fn validate(app: &axum::Router, ev: &str, validator: Uuid, outcome: &str, rel: &str) {
-    let (s, _) = call(app, "POST", &format!("/v1/evidence/{ev}/validations"),
-        Some(json!({"validatorUserId": validator, "outcome": outcome, "validatorRelationship": rel}))).await;
+    let (s, _) = call(
+        app,
+        "POST",
+        &format!("/v1/evidence/{ev}/validations"),
+        Some(
+            json!({"validatorUserId": validator, "outcome": outcome, "validatorRelationship": rel}),
+        ),
+    )
+    .await;
     assert_eq!(s, StatusCode::CREATED, "validation {outcome}/{rel}");
 }
 
 async fn attr_of(app: &axum::Router, user: Uuid, org: Uuid, key: &str) -> Value {
-    let (s, v) = call(app, "GET", &format!("/v1/users/{user}/attributes?orgId={org}"), None).await;
+    let (s, v) = call(
+        app,
+        "GET",
+        &format!("/v1/users/{user}/attributes?orgId={org}"),
+        None,
+    )
+    .await;
     assert_eq!(s, StatusCode::OK);
-    v["attributes"].as_array().unwrap().iter().find(|a| a["key"] == key).unwrap().clone()
+    v["attributes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|a| a["key"] == key)
+        .unwrap()
+        .clone()
 }
 
 #[tokio::test]
@@ -165,14 +290,20 @@ async fn significance_thresholds_and_drop_not_negative() {
     for i in 0..6 {
         add_subjective(&app, org, subj2, authors[i % 2], "leadership").await;
     }
-    assert_eq!(attr_of(&app, subj2, org, "leadership").await["status"], "insufficient_signal");
+    assert_eq!(
+        attr_of(&app, subj2, org, "leadership").await["status"],
+        "insufficient_signal"
+    );
 
     // AC1: 4 evidence / 3 authors → insufficient
     let mut evs = vec![];
     for i in 0..4 {
         evs.push(add_subjective(&app, org, subj, authors[i % 3], "leadership").await);
     }
-    assert_eq!(attr_of(&app, subj, org, "leadership").await["status"], "insufficient_signal");
+    assert_eq!(
+        attr_of(&app, subj, org, "leadership").await["status"],
+        "insufficient_signal"
+    );
     // 5th evidence, 3 distinct authors → emerging, score null
     evs.push(add_subjective(&app, org, subj, authors[3], "leadership").await);
     let a = attr_of(&app, subj, org, "leadership").await;
@@ -189,7 +320,7 @@ async fn significance_thresholds_and_drop_not_negative() {
     assert_eq!(a["status"], "established");
     assert_eq!(a["distinctValidators"], 5);
     assert_eq!(a["validations"]["no"], 2); // raw data visible
-    assert_eq!(a["score"], 100.0);         // but dropped from score (invariant 1)
+    assert_eq!(a["score"], 100.0); // but dropped from score (invariant 1)
 
     // peer no added → score 3/(3+1)=75
     validate(&app, &evs[0], validators[5], "no", "peer").await;

@@ -54,7 +54,10 @@ pub struct SummaryQuery {
 
 pub fn routes(pool: Pool) -> Router {
     Router::new()
-        .route("/v1/attributes", post(create_attribute).get(list_attributes))
+        .route(
+            "/v1/attributes",
+            post(create_attribute).get(list_attributes),
+        )
         .route("/v1/evidence", post(create_evidence).get(list_evidence))
         .route("/v1/evidence/:id", get(get_evidence))
         .route("/v1/evidence/:id/decide", post(decide_evidence))
@@ -64,7 +67,10 @@ pub fn routes(pool: Pool) -> Router {
         .with_state(pool)
 }
 
-async fn create_attribute(State(pool): State<Pool>, Json(body): Json<CreateAttribute>) -> ApiResult {
+async fn create_attribute(
+    State(pool): State<Pool>,
+    Json(body): Json<CreateAttribute>,
+) -> ApiResult {
     if body.kind != "objective" && body.kind != "subjective" {
         return Err(err(StatusCode::BAD_REQUEST, "invalid_kind"));
     }
@@ -79,7 +85,10 @@ async fn create_attribute(State(pool): State<Pool>, Json(body): Json<CreateAttri
     match row {
         Ok(r) => {
             let id: Uuid = r.get(0);
-            Ok((StatusCode::CREATED, Json(json!({ "id": id, "key": body.key, "name": body.name, "kind": body.kind }))))
+            Ok((
+                StatusCode::CREATED,
+                Json(json!({ "id": id, "key": body.key, "name": body.name, "kind": body.kind })),
+            ))
         }
         Err(_) => Err(err(StatusCode::CONFLICT, "key_taken")),
     }
@@ -88,7 +97,10 @@ async fn create_attribute(State(pool): State<Pool>, Json(body): Json<CreateAttri
 async fn list_attributes(State(pool): State<Pool>) -> ApiResult {
     let client = pool.get().await.map_err(internal)?;
     let rows = client
-        .query("SELECT id, key, name, kind FROM core.attributes ORDER BY key", &[])
+        .query(
+            "SELECT id, key, name, kind FROM core.attributes ORDER BY key",
+            &[],
+        )
         .await
         .map_err(internal)?;
     let list: Vec<Value> = rows
@@ -101,7 +113,10 @@ async fn list_attributes(State(pool): State<Pool>) -> ApiResult {
 async fn create_evidence(State(pool): State<Pool>, Json(body): Json<CreateEvidence>) -> ApiResult {
     let client = pool.get().await.map_err(internal)?;
     let attr = client
-        .query_opt("SELECT id, kind FROM core.attributes WHERE key = $1", &[&body.attribute_key])
+        .query_opt(
+            "SELECT id, kind FROM core.attributes WHERE key = $1",
+            &[&body.attribute_key],
+        )
         .await
         .map_err(internal)?
         .ok_or_else(|| err(StatusCode::BAD_REQUEST, "unknown_attribute"))?;
@@ -227,8 +242,13 @@ async fn list_evidence(State(pool): State<Pool>, Query(q): Query<ListQuery>) -> 
             })
         })
         .collect();
-    let next = rows.last().map(|r| r.get::<_, chrono::DateTime<chrono::Utc>>(5).to_rfc3339());
-    Ok((StatusCode::OK, Json(json!({ "items": items, "nextBefore": next }))))
+    let next = rows
+        .last()
+        .map(|r| r.get::<_, chrono::DateTime<chrono::Utc>>(5).to_rfc3339());
+    Ok((
+        StatusCode::OK,
+        Json(json!({ "items": items, "nextBefore": next })),
+    ))
 }
 
 #[derive(Deserialize)]
@@ -249,7 +269,11 @@ async fn decide_evidence(
         return Err(err(StatusCode::BAD_REQUEST, "invalid_outcome"));
     }
     let client = pool.get().await.map_err(internal)?;
-    let new_state = if body.outcome == "yes" { "active" } else { "dropped" };
+    let new_state = if body.outcome == "yes" {
+        "active"
+    } else {
+        "dropped"
+    };
     let n = client
         .execute(
             "UPDATE core.evidence SET state = $1 WHERE id = $2 AND state = 'pending_upward'",
@@ -346,7 +370,9 @@ async fn create_validation(
             let id: Uuid = r.get(0);
             Ok((
                 StatusCode::CREATED,
-                Json(json!({ "id": id, "evidenceId": evidence_id, "validatorUserId": body.validator_user_id, "outcome": body.outcome })),
+                Json(
+                    json!({ "id": id, "evidenceId": evidence_id, "validatorUserId": body.validator_user_id, "outcome": body.outcome }),
+                ),
             ))
         }
         Err(_) => Err(err(StatusCode::CONFLICT, "duplicate_validation")),
@@ -386,8 +412,13 @@ async fn signal_policy() -> Json<Value> {
 }
 
 fn compute_status_score(
-    kind: &str, evidence_count: i64, distinct_authors: i64, distinct_validators: i64,
-    yes: i64, counted_no: i64, mean_value: Option<f64>,
+    kind: &str,
+    evidence_count: i64,
+    distinct_authors: i64,
+    distinct_validators: i64,
+    yes: i64,
+    counted_no: i64,
+    mean_value: Option<f64>,
 ) -> (&'static str, Option<f64>) {
     match kind {
         "objective" => {
@@ -406,7 +437,9 @@ fn compute_status_score(
                 return ("insufficient_signal", None);
             }
             // §5: established additionally requires at least one countable validation
-            if distinct_validators >= POLICY.subj_established_min_validators && (yes + counted_no) >= 1 {
+            if distinct_validators >= POLICY.subj_established_min_validators
+                && (yes + counted_no) >= 1
+            {
                 let score = 100.0 * yes as f64 / (yes + counted_no) as f64;
                 ("established", Some(score))
             } else {
@@ -455,7 +488,13 @@ async fn user_attribute_summary(
             let distinct_validators: i64 = r.get(9);
             let mean_value: Option<f64> = r.get(10);
             let (status, score) = compute_status_score(
-                &kind, evidence_count, distinct_authors, distinct_validators, yes, counted_no, mean_value,
+                &kind,
+                evidence_count,
+                distinct_authors,
+                distinct_validators,
+                yes,
+                counted_no,
+                mean_value,
             );
             json!({
                 "normalizedScore": Value::Null,
