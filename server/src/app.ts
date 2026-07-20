@@ -16,6 +16,7 @@ import { registerOutboundRoutes } from "./outbound.js";
 import { registerTeamViewRoutes } from "./teamview.js";
 import type { Pool } from "./db.js";
 import { registerOrgRoutes } from "./orgs.js";
+import { registerJoinRequestRoutes } from "./joinRequests.js";
 
 export interface AppOptions {
   coreUrl: string;
@@ -73,6 +74,7 @@ export function buildApp(opts: AppOptions) {
   if (opts.pool) {
     registerAuthRoutes(app, opts.pool, { secureCookies: opts.secureCookies ?? false });
     registerOrgRoutes(app, opts.pool);
+    registerJoinRequestRoutes(app, opts.pool);
     registerFeedbackRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerFlowRoutes(app, opts.pool, { coreUrl: opts.coreUrl, fetchImpl });
     registerCompanionRoutes(app, opts.pool);
