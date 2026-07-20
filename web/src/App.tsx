@@ -47,6 +47,24 @@ function AuthScreen() {
   );
 }
 
+/** SPEC-024 R7: unmistakable demo state with a one-click exit. */
+export function DemoBanner() {
+  const qc = useQueryClient();
+  return (
+    <div className="banner" role="status">
+      Demo mode — read-only, showing seeded example data.{" "}
+      <button
+        onClick={async () => {
+          await fetch("/api/demo/exit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) });
+          await qc.invalidateQueries({ queryKey: ["me"] });
+        }}
+      >
+        Exit demo
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const invitePath = window.location.pathname.match(/^\/invite\/([a-f0-9]+)$/);
   const qc = useQueryClient();
@@ -69,6 +87,8 @@ export default function App() {
   const activeOrg = orgId ?? orgs[0]?.orgId ?? null;
 
   return (
+    <>
+    {me.data.demo && <DemoBanner />}
     <div className="shell">
       <nav className="rail">
         <div className="who">{me.data.user.name}</div>
@@ -109,5 +129,6 @@ export default function App() {
         {activeOrg ? <InboxPanel orgId={activeOrg} /> : null}
       </aside>
     </div>
+    </>
   );
 }
