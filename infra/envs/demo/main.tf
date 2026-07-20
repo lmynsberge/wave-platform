@@ -138,7 +138,7 @@ module "core" {
   env               = { CORE_PORT = "8080" }
   secret_env        = { DATABASE_URL = google_secret_manager_secret.core_db_url.secret_id }
   vpc_subnet        = google_compute_subnetwork.vpc.id # ISS-011: reach private-IP SQL
-  depends_on        = [module.db] # boot needs the SQL user, not just the instance (ISS-010)
+  depends_on        = [module.db]                      # boot needs the SQL user, not just the instance (ISS-010)
 }
 
 module "server" {
@@ -166,7 +166,7 @@ module "server" {
     # SLACK_SIGNING_SECRET / SLACK_BOT_TOKEN / TEAMS_SHARED_SECRET / LLM_API_KEY
   }
   vpc_subnet = google_compute_subnetwork.vpc.id # ISS-011: makes server→core internal; reaches private SQL
-  depends_on = [module.db] # boot needs the SQL user, not just the instance (ISS-010)
+  depends_on = [module.db]                      # boot needs the SQL user, not just the instance (ISS-010)
 }
 
 resource "google_cloud_run_v2_job" "migrate" {
