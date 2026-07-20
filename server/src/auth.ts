@@ -6,7 +6,22 @@ import type { Pool } from "./db.js";
 const SESSION_COOKIE = "wave_session";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-export interface AuthedUser { id: string; email: string; name: string }
+export interface AuthedUser { id: string; email: string; name: string; demo?: boolean }
+
+let DEMO_PERSONA_EMAIL: string | null = null;
+/** SPEC-024 R1: the configured persona MUST be a seeded synthetic account. */
+export function configureDemo(personaEmail: string | null | undefined) {
+  DEMO_PERSONA_EMAIL = personaEmail ?? null;
+}
+
+/** SPEC-024 R2: null when unconfigured or the persona user doesn't exist. */
+export async function demoPersona(pool: Pool): Promise<AuthedUser | null> {
+  if (!DEMO_PERSONA_EMAIL) return null;
+  const { rows } = await pool.query(
+    "SELECT id, email, name FROM users WHERE email = $1", [DEMO_PERSONA_EMAIL],
+  );
+  return rows[0] ? { id: rows[0].id, email: rows[0].email, name: rows[0].name } : null;
+}
 
 export function hashPassword(password: string, salt: string): string {
   return scryptSync(password, salt, 64).toString("hex");
@@ -44,21 +59,36 @@ async function createSession(pool: Pool, userId: string, reply: FastifyReply) {
   setSessionCookie(reply, token, expires);
 }
 
-export async function currentUser(pool: Pool, req: FastifyRequest): Promise<AuthedUser | null> {
+export interface SessionInfo { id: string; userId: string; demo: boolean }
+
+/** The live session row for this request's cookie, or null (expired rows lazily deleted). */
+export async function currentSession(pool: Pool, req: FastifyRequest): Promise<SessionInfo | null> {
   const token = readToken(req);
   if (!token) return null;
   const { rows } = await pool.query(
-    `SELECT u.id, u.email, u.name, s.expires_at, s.id AS session_id
-     FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1`,
+    "SELECT id, user_id, demo, expires_at FROM sessions WHERE token_hash = $1",
     [sha256(token)],
   );
   const row = rows[0];
   if (!row) return null;
   if (new Date(row.expires_at) < new Date()) {
-    await pool.query("DELETE FROM sessions WHERE id = $1", [row.session_id]);
+    await pool.query("DELETE FROM sessions WHERE id = $1", [row.id]);
     return null;
   }
-  return { id: row.id, email: row.email, name: row.name };
+  return { id: row.id, userId: row.user_id, demo: row.demo === true };
+}
+
+export async function currentUser(pool: Pool, req: FastifyRequest): Promise<AuthedUser | null> {
+  const session = await currentSession(pool, req);
+  if (!session) return null;
+  if (session.demo) {
+    // SPEC-024 R3/R6: act as the persona; fall back to the real user if unresolvable
+    const persona = await demoPersona(pool);
+    if (persona) return { ...persona, demo: true };
+  }
+  const { rows } = await pool.query("SELECT id, email, name FROM users WHERE id = $1", [session.userId]);
+  const row = rows[0];
+  return row ? { id: row.id, email: row.email, name: row.name } : null;
 }
 
 export function requireAuth(pool: Pool) {
@@ -126,6 +156,7 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool, opts?: { se
        FROM memberships m JOIN organizations o ON o.id = m.org_id WHERE m.user_id = $1`,
       [user.id],
     );
-    return reply.send({ user, memberships: rows });
+    const { demo, ...plain } = user;
+    return reply.send({ user: plain, memberships: rows, ...(demo ? { demo: true } : {}) });
   });
 }

@@ -17,6 +17,8 @@ import { registerTeamViewRoutes } from "./teamview.js";
 import type { Pool } from "./db.js";
 import { registerOrgRoutes } from "./orgs.js";
 import { registerJoinRequestRoutes } from "./joinRequests.js";
+import { registerDemoGuard, registerDemoRoutes } from "./demo.js";
+import { configureDemo } from "./auth.js";
 
 export interface AppOptions {
   coreUrl: string;
@@ -30,6 +32,8 @@ export interface AppOptions {
   dispatchToken?: string;
   /** SPEC-017 G1: base64 32-byte KEK for BYO-key encryption at rest. */
   keyEncryptionKey?: string;
+  /** SPEC-024 R1: seeded synthetic persona for read-only demo mode; never a real account. */
+  demoPersonaEmail?: string;
 }
 
 export function buildApp(opts: AppOptions) {
@@ -72,6 +76,9 @@ export function buildApp(opts: AppOptions) {
   });
 
   if (opts.pool) {
+    configureDemo(opts.demoPersonaEmail);
+    registerDemoGuard(app, opts.pool); // SPEC-024 R4: before any mutating route runs
+    registerDemoRoutes(app, opts.pool);
     registerAuthRoutes(app, opts.pool, { secureCookies: opts.secureCookies ?? false });
     registerOrgRoutes(app, opts.pool);
     registerJoinRequestRoutes(app, opts.pool);
