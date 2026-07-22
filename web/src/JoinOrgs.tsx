@@ -24,10 +24,36 @@ export function JoinOrgs() {
     onSettled: () => void qc.invalidateQueries({ queryKey: ["orgDirectory"] }),
   });
 
+  const demo = useQuery({
+    queryKey: ["demoAvailable"],
+    queryFn: async () => {
+      const res = await fetch("/api/demo");
+      if (!res.ok) throw new Error("demo probe failed");
+      return (await res.json()) as { available: boolean };
+    },
+    retry: false,
+  });
+  const enterDemo = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/demo/enter", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}),
+      });
+      if (!res.ok) throw new Error("enter demo failed");
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["me"] }),
+  });
+
   const joinable = (dir.data?.orgs ?? []).filter((o) => !o.membership);
 
   return (
     <div className="join-orgs">
+      {demo.data?.available && (
+        <div className="card">
+          <strong>Just looking?</strong>{" "}
+          <span className="hint">Explore Wave read-only with example data while you wait.</span>{" "}
+          <button disabled={enterDemo.isPending} onClick={() => enterDemo.mutate()}>Explore demo mode</button>
+        </div>
+      )}
       <h2>Find your organization</h2>
       <p className="hint">
         Request access to any organization below — you can ask more than one. An organization admin

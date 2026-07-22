@@ -1,6 +1,8 @@
 export interface Me {
   user: { id: string; email: string; name: string };
   memberships: Array<{ orgId: string; slug: string; name: string; role: string }>;
+  /** SPEC-024: present and true while this session views the demo persona. */
+  demo?: boolean;
 }
 export interface AttributeSummary {
   key: string; name: string; kind: "objective" | "subjective";
