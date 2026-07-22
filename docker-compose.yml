@@ -31,6 +31,7 @@ services:
       CORE_URL: http://core:8081
       PORT: "8080"
       DATABASE_URL: postgres://wave:wave@postgres:5432/wave
+      DEMO_PERSONA_EMAIL: priya@meridian.demo
     ports: ["8080:8080"]
     depends_on: [core]
 
